@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+{% block title %}Statistiques & Tableau de bord — Socadel{% endblock %}
+
+{% block extra_head %}
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+  /* Container Principal */
+  .stats-container {
+    padding: 32px;
+    font-family: 'Outfit', sans-serif;
+    color: #0a1628;
+    background-color: #f4f7fa;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .font-mono-num {
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Style global des cartes */
+  .card-saas {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 22px 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(226, 236, 244, 0.8);
+    box-sizing: border-box;
+  }
+
+  /* Barre d'action et filtre */
+  .action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .filter-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    padding: 6px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(226, 236, 244, 0.8);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+
+  .filter-select {
+    border: none;
+    background: transparent;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0a1628;
+    padding: 4px 8px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .btn-filter {
+    background: #0984e3;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-filter:hover {
+    background: #0773c5;
+  }
+
+  .period-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #eaf4ff;
+    color: #0984e3;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Ligne 1 : 4 Cartes alignées sur 1 ligne */
+  .kpi-row {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    flex: 1; /* Force les 4 cartes à faire exactement la même largeur */
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    min-width: 0; /* Évite le débordement */
+  }
+
+  /* Ligne 2 : 2 Graphiques côte à côte */
+  .charts-row {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .chart-card-left {
+    flex: 0 0 63%; /* Occupe ~63% de la ligne */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .chart-card-right {
+    flex: 0 0 35%; /* Occupe ~35% de la ligne */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Éléments internes */
+  .icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .badge-saas {
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Responsive pour écrans mobiles/tablettes */
+  @media (max-width: 1024px) {
+    .kpi-row {
+      flex-wrap: wrap;
+    }
+    .kpi-card {
+      flex: 0 0 calc(50% - 10px);
+    }
+    .charts-row {
+      flex-direction: column;
+    }
+    .chart-card-left, .chart-card-right {
+      flex: 0 0 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+
+  <!-- En-tête avec Filtre par Période -->
+  <div class="action-bar">
+    <div>
+      <h1 style="font-size: 26px; font-weight: 800; margin: 0; color: #0a1628;">Statistiques & Tableau de bord</h1>
+      <p style="font-size: 13px; color: #5a7080; margin: 4px 0 0 0;">Analyse complète de votre consommation</p>
+    </div>
+
+    <!-- Formulaire de filtrage -->
+    <form method="get" action="" class="filter-form">
+      <i data-lucide="calendar" style="width: 16px; height: 16px; color: #5a7080;"></i>
+      <select name="mois" class="filter-select">
+        {% for m_num, m_nom in mois_liste %}
+          <option value="{{ m_num }}" {% if m_num == mois_selectionne %}selected{% endif %}>{{ m_nom }}</option>
+        {% empty %}
+          <option value="1">Janvier</option>
+          <option value="2">Février</option>
+          <option value="3">Mars</option>
+          <option value="4">Avril</option>
+          <option value="5">Mai</option>
+          <option value="6">Juin</option>
+          <option value="7" selected>Juillet</option>
+          <option value="8">Août</option>
+          <option value="9">Septembre</option>
+          <option value="10">Octobre</option>
+          <option value="11">Novembre</option>
+          <option value="12">Décembre</option>
+        {% endfor %}
+      </select>
+
+      <select name="annee" class="filter-select">
+        {% for a in annees_liste %}
+          <option value="{{ a }}" {% if a == annee_selectionnee %}selected{% endif %}>{{ a }}</option>
+        {% empty %}
+          <option value="2026" selected>2026</option>
+          <option value="2025">2025</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit" class="btn-filter">Filtrer</button>
+    </form>
+  </div>
+
+  <!-- Récapitulatif de la période sélectionnée -->
+  <div style="margin-bottom: 20px;">
+    <span class="period-badge">
+      <i data-lucide="info" style="width: 14px; height: 14px;"></i>
+      Période affichée : {{ nom_mois_selectionne|default:"Juillet" }} {{ annee_selectionnee|default:"2026" }}
+    </span>
+  </div>
+
+  <!-- LIGNE 1 : 4 CARTES KPI PARFAITEMENT ÉGALES -->
+  <div class="kpi-row">
+
+    <!-- Carte 1 -->
+    <div class="card-saas kpi-card" style="background: linear-gradient(135deg, #0984e3 0%, #00b894 100%); border: none; color: white;">
+      <div class="flex-between">
+        <div class="icon-box" style="background: rgba(255,255,255,0.2);">
+          <i data-lucide="bar-chart-3" style="width:20px; height:20px; color:white;"></i>
+        </div>
+        <span class="badge-saas" style="background: rgba(255,255,255,0.2); color: white;">Période</span>
+      </div>
+      <div>
+        <div class="font-mono-num" style="font-size: 26px; font-weight: 800; line-height: 1;">
+          {{ total_kWh_mois|default:"838"|floatformat:0 }} <span style="font-size: 14px; font-weight: 600;">kWh</span>
+        </div>
+        <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">Conso. mensuelle</div>
+      </div>
+    </div>
+
+    <!-- Carte 2 -->
+    <div class="card-saas kpi-card">
+      <div class="flex-between">
+        <div class="icon-box" style="background: #e6f8f5;">
+          <i data-lucide="wallet" style="width:20px; height:20px; color:#00b894;"></i>
+        </div>
+        <span class="badge-saas" style="background: #e6f8f5; color: #00b894;">Période</span>
+      </div>
+      <div>
+        <div class="font-mono-num" style="font-size: 26px; font-weight: 800; color: #00b894; line-height: 1;">
+          {{ total_fcfa_mois|default:"99174"|floatformat:0 }} <span style="font-size: 14px; font-weight: 600;">FCFA</span>
+        </div>
+        <div style="font-size: 13px; color: #5a7080; margin-top: 4px;">Facture estimée</div>
+      </div>
+    </div>
+
+    <!-- Carte 3 -->
+    <div class="card-saas kpi-card">
+      <div class="flex-between">
+        <div class="icon-box" style="background: #eaf4ff;">
+          <i data-lucide="trending-up" style="width:20px; height:20px; color:#0984e3;"></i>
+        </div>
+        <span class="badge-saas" style="background: #fef2f2; color: #ef4444;">Évolution</span>
+      </div>
+      <div>
+        <div class="font-mono-num" style="font-size: 26px; font-weight: 800; color: #ef4444; line-height: 1;">
+          +{{ evolution_pct|default:"5.1"|floatformat:1 }}%
+        </div>
+        <div style="font-size: 13px; color: #5a7080; margin-top: 4px;">Vs mois dernier</div>
+      </div>
+    </div>
+
+    <!-- Carte 4 -->
+    <div class="card-saas kpi-card">
+      <div class="flex-between">
+        <div class="icon-box" style="background: #f0fdf4;">
+          <i data-lucide="leaf" style="width:20px; height:20px; color:#16a34a;"></i>
+        </div>
+        <span class="badge-saas" style="background: #f0fdf4; color: #16a34a;">Indice</span>
+      </div>
+      <div>
+        <div class="font-mono-num" style="font-size: 26px; font-weight: 800; color: #0984e3; line-height: 1;">
+          {{ score_efficacite|default:"62" }}<span style="font-size: 14px; color: #5a7080;">/100</span>
+        </div>
+        <div style="font-size: 13px; color: #5a7080; margin-top: 4px;">Score efficacité</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LIGNE 2 : 2 GRAPHIQUES CÔTE À CÔTE -->
+  <div class="charts-row">
+
+    <!-- Graphique Gauche (Évolution) -->
+    <div class="card-saas chart-card-left">
+      <div style="margin-bottom: 12px;">
+        <h2 style="font-size: 16px; font-weight: 700; margin: 0; color: #0a1628;">Évolution consommation & facture</h2>
+        <p style="font-size: 12px; color: #5a7080; margin: 2px 0 0 0;">Historique récent</p>
+      </div>
+      <div style="position: relative; width: 100%; height: 260px;">
+        <canvas id="chartEvol"></canvas>
+      </div>
+    </div>
+
+    <!-- Graphique Droit (Par catégorie) -->
+    <div class="card-saas chart-card-right">
+      <div>
+        <h2 style="font-size: 16px; font-weight: 700; margin: 0; color: #0a1628;">Par catégorie</h2>
+        <p style="font-size: 12px; color: #5a7080; margin: 2px 0 0 0;">Répartition kWh/mois</p>
+      </div>
+
+      <div style="position: relative; width: 100%; height: 170px; margin: 10px 0;">
+        <canvas id="chartDonut"></canvas>
+      </div>
+
+      <!-- Légende compacte -->
+      <div style="border-top: 1px solid #eef2f6; padding-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+        {% if categories_stats %}
+          {% for cat in categories_stats %}
+          <div class="flex-between" style="font-size: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ cat.couleur|default:'#0984e3' }};"></span> {{ cat.nom }}
+            </div>
+            <span class="font-mono-num" style="font-weight: 600; color: #5a7080;">{{ cat.kWh|floatformat:1 }} kWh</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="flex-between" style="font-size: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #0984e3;"></span> Climatisation
+            </div>
+            <span class="font-mono-num" style="font-weight: 600; color: #5a7080;">549.0 kWh</span>
+          </div>
+          <div class="flex-between" style="font-size: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #00b894;"></span> Électroménager
+            </div>
+            <span class="font-mono-num" style="font-weight: 600; color: #5a7080;">198.0 kWh</span>
+          </div>
+          <div class="flex-between" style="font-size: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #00cec9;"></span> Informatique
+            </div>
+            <span class="font-mono-num" style="font-weight: 600; color: #5a7080;">59.1 kWh</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  lucide.createIcons();
+
+  // Données dynamiques Django (fallback vers les données par défaut)
+  const chartLabels = {{ chart_labels|default:"['Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul']"|safe }};
+  const chartKwhData = {{ chart_kwh_data|default:"[210, 230, 250, 260, 275, 265]"|safe }};
+  const chartFcfaData = {{ chart_fcfa_data|default:"[28000, 31000, 33000, 34500, 36000, 35000]"|safe }};
+
+  const donutLabels = {{ donut_labels|default:"['Climatisation', 'Électroménager', 'Informatique']"|safe }};
+  const donutData = {{ donut_data|default:"[549.0, 198.0, 59.1]"|safe }};
+  const donutColors = {{ donut_colors|default:"['#0984e3', '#00b894', '#00cec9']"|safe }};
+
+  // 1. Graphique Courbes (Gauche)
+  const ctxEvol = document.getElementById('chartEvol').getContext('2d');
+  new Chart(ctxEvol, {
+    type: 'line',
+    data: {
+      labels: chartLabels,
+      datasets: [
+        {
+          label: 'Consommation (kWh)',
+          data: chartKwhData,
+          borderColor: '#0984e3',
+          backgroundColor: 'rgba(9, 132, 227, 0.08)',
+          borderWidth: 3,
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'Facture (FCFA)',
+          data: chartFcfaData,
+          borderColor: '#00b894',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          tension: 0.3,
+          yAxisID: 'yFcfa'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, font: { family: 'Outfit', size: 11 } } }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: '#f0f3f6' } },
+        yFcfa: { position: 'right', grid: { display: false } }
+      }
+    }
+  });
+
+  // 2. Graphique Donut (Droit)
+  const ctxDonut = document.getElementById('chartDonut').getContext('2d');
+  new Chart(ctxDonut, {
+    type: 'doughnut',
+    data: {
+      labels: donutLabels,
+      datasets: [{
+        data: donutData,
+        backgroundColor: donutColors,
+        borderWidth: 3,
+        borderColor: '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+</script>
+{% endblock %}

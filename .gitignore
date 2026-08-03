@@ -1,0 +1,4 @@
+local_settings.py
+db_local_augustin.sqlite3
+__pycache__/
+*.pyc

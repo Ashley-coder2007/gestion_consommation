@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block title %}Facturation — {{ appareil.nom }} — Socadel{% endblock %}
+
+{% block content %}
+<style>
+  .grid-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .grid-charts {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+  }
+  @media (max-width: 1024px) {
+    .grid-stats { grid-template-columns: repeat(2, 1fr); }
+    .grid-charts { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .grid-stats { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div style="display: flex; flex-direction: column; gap: 20px;">
+
+  <!-- En-tête de l'appareil -->
+  <div style="display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 16px; background: #ffffff; border: 1px solid #ccdde9; flex-wrap: wrap;">
+    <div style="width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; background: #f0f4f8; border: 1px solid #ccdde9; flex-shrink: 0;">
+      {{ appareil.icone|default:'🔌' }}
+    </div>
+    <div style="flex: 1; min-width: 200px;">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 2px; color: #5a7080;">
+        <a href="{% url 'appareil_list' %}" style="color: #0984e3; text-decoration: none;">Appareils</a>
+        <span>›</span>
+        <span style="font-weight: 500; color: #0a1628;">{{ appareil.nom }}</span>
+      </div>
+      <h2 style="font-size: 20px; font-weight: 700; margin: 0; font-family: 'Outfit', sans-serif;">{{ appareil.nom }}</h2>
+      <p style="font-size: 13px; margin: 4px 0 0 0; color: #5a7080;">{{ appareil.categorie }} · <span style="font-family: monospace;">{{ appareil.puissance }} W</span> · <span style="font-family: monospace;">{{ appareil.heures_par_jour|floatformat:1 }} h/j</span></p>
+    </div>
+    <a href="{% url 'cout_global' %}" class="btn-secondary" style="text-decoration:none; margin-left: auto;">
+      📊 <span>Facturation globale</span>
+    </a>
+  </div>
+
+  <!-- Barre de filtres & Régime tarifaire -->
+  <div style="padding: 12px; background: #ffffff; border-radius: 16px; border: 1px solid #e2ecf4; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+      {% for p_id, p_label in periodes %}
+      <a href="?mode={{ p_id }}"
+         style="padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; text-decoration: none; transition: all 0.2s;
+                background: {% if mode == p_id %}#00b894{% else %}#e2ecf4{% endif %};
+                color: {% if mode == p_id %}#ffffff{% else %}#5a7080{% endif %};">
+        {{ p_label }}
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- Sélecteur de Régime Tarifaire -->
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <label for="app_type_usage" style="font-size: 12px; font-weight: 600; color: #0a1628; margin: 0;">Type d'usage :</label>
+      <select id="app_type_usage" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ccdde9; font-size: 12px; background: #f8fafc; color: #0a1628; outline: none; font-weight: 600;">
+        <option value="residentiel" selected>Domestique / Résidentiel</option>
+        <option value="professionnel">Professionnel / Non résidentiel</option>
+      </select>
+    </div>
+
+    {% if mode == 'personnalise' %}
+    <form method="get" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px; border-radius: 10px; background: #f0f4f8;">
+      <input type="hidden" name="mode" value="personnalise" />
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <label style="margin:0; font-size: 11px;">Du</label>
+        <input type="date" name="date_debut" value="{{ date_debut }}" style="width:auto; padding:4px 8px; font-size: 11px; height: 30px;"/>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <label style="margin:0; font-size: 11px;">Au</label>
+        <input type="date" name="date_fin" value="{{ date_fin }}" style="width:auto; padding:4px 8px; font-size: 11px; height: 30px;"/>
+      </div>
+      <button type="submit" class="btn-primary" style="padding:4px 10px; font-size: 11px; height: 30px;">OK</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- Label période active -->
+  <div style="font-size: 13px; font-weight: 500; padding: 10px 14px; border-radius: 10px; background: #ffffff; border: 1px solid #e2ecf4; color: #5a7080;">
+    Période d'analyse : <span style="font-weight: 600; color: #0a1628;">{{ label_periode }}</span> ({{ jours }} jour{% if jours > 1 %}s{% endif %})
+  </div>
+
+  <!-- 4 BLOCS STATISTIQUES EN 1 LIGNE -->
+  <div class="grid-stats">
+
+    <div style="background: linear-gradient(135deg, #0984e3 0%, #00b894 100%); color: #ffffff; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 18px;">⚡</span>
+        <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.25);">Total</span>
+      </div>
+      <div>
+        <div style="font-size: 22px; font-weight: 800; font-family: 'Outfit', sans-serif;">
+          {{ conso_kWh|floatformat:2 }} <span style="font-size: 14px;">kWh</span>
+        </div>
+        <div style="font-size: 11px; opacity: 0.9;">Consommation totale</div>
+      </div>
+    </div>
+
+    <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 18px;">💰</span>
+        <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: #e2ecf4; color: #5a7080;">Énergie</span>
+      </div>
+      <div>
+        <div style="font-size: 22px; font-weight: 800; color: #0a1628; font-family: 'Outfit', sans-serif;">
+          <span id="app_cout_total">0</span> <span style="font-size: 14px; color: #5a7080;">FCFA</span>
+        </div>
+        <div style="font-size: 11px; color: #5a7080;">Coût estimé</div>
+      </div>
+    </div>
+
+    <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 18px;">📊</span>
+        <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: #e2ecf4; color: #5a7080;">Par jour</span>
+      </div>
+      <div>
+        <div style="font-size: 22px; font-weight: 800; color: #0a1628; font-family: 'Outfit', sans-serif;">
+          {{ conso_jour|floatformat:2 }} <span style="font-size: 14px; color: #5a7080;">kWh</span>
+        </div>
+        <div style="font-size: 11px; color: #5a7080;">Moyenne / jour</div>
+      </div>
+    </div>
+
+    <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 18px;">🗓️</span>
+        <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: #e2ecf4; color: #5a7080;">Coût/j</span>
+      </div>
+      <div>
+        <div style="font-size: 22px; font-weight: 800; color: #0a1628; font-family: 'Outfit', sans-serif;">
+          <span id="app_cout_par_jour">0</span> <span style="font-size: 14px; color: #5a7080;">FCFA</span>
+        </div>
+        <div style="font-size: 11px; color: #5a7080;">Dépense / jour</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GRAPHIQUE & DÉTAIL TECHNIQUE -->
+  <div class="grid-charts">
+
+    <!-- Graphique -->
+    <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 16px; border-radius: 16px;">
+      <div style="margin-bottom: 12px;">
+        <h3 style="font-weight: 700; font-size: 16px; color: #0a1628; margin: 0; font-family: 'Outfit', sans-serif;">Évolution journalière</h3>
+        <p style="font-size: 12px; color: #5a7080; margin: 2px 0 0 0;">Estimation sur la période</p>
+      </div>
+      <div style="position: relative; width: 100%; height: 240px;">
+        <canvas id="chartAppareil"></canvas>
+      </div>
+    </div>
+
+    <!-- Détail technique -->
+    <div style="background: #ffffff; border: 1px solid #e2ecf4; border-radius: 16px; display: flex; flex-direction: column;">
+      <div style="padding: 14px 16px; border-bottom: 1px solid #e2ecf4;">
+        <h3 style="font-weight: 700; font-size: 16px; color: #0a1628; margin: 0; font-family: 'Outfit', sans-serif;">Détail technique</h3>
+      </div>
+      <div style="flex: 1;">
+        {% for row in detail_technique %}
+        <div style="padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-bottom: 1px solid #f0f4f8;">
+          <span style="color: #5a7080;">{{ row.label }}</span>
+          <span style="font-weight: 700; font-family: monospace; color: {{ row.color|default:'#0a1628' }};">
+            {{ row.valeur }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // 1. Initialisation Chart
+  const labels = {{ chart_labels|safe }};
+  const data   = {{ chart_data|safe }};
+
+  const ctx = document.getElementById('chartAppareil').getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+  gradient.addColorStop(0, 'rgba(0, 184, 148, 0.25)');
+  gradient.addColorStop(1, 'rgba(0, 184, 148, 0.0)');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Consommation (kWh)',
+        data,
+        borderColor: '#00b894',
+        backgroundColor: gradient,
+        borderWidth: 2,
+        pointRadius: data.length > 31 ? 0 : 3,
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#5a7080' } },
+        y: { grid: { color: '#f0f4f8' }, ticks: { font: { size: 10 }, color: '#5a7080' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // 2. Calcul du barème tranches par appareil
+  const selectUsageApp = document.getElementById('app_type_usage');
+  const appKwhConso = parseFloat("{{ conso_kWh }}") || 0;
+  const appJoursAnalyse = parseFloat("{{ jours }}") || 1;
+
+  function calculerCoutAppareil(kwh, usage) {
+    let cout = 0;
+    if (usage === 'residentiel') {
+      const t1 = Math.min(kwh, 110);
+      if (t1 > 0) cout += t1 * 50;
+
+      const t2 = Math.min(Math.max(kwh - 110, 0), 290);
+      if (t2 > 0) cout += t2 * 79;
+
+      const t3 = Math.min(Math.max(kwh - 400, 0), 400);
+      if (t3 > 0) cout += t3 * 94;
+
+      const t4 = Math.min(Math.max(kwh - 800, 0), 1200);
+      if (t4 > 0) cout += t4 * 99;
+    } else {
+      const t1 = Math.min(kwh, 110);
+      if (t1 > 0) cout += t1 * 84;
+
+      const t2 = Math.min(Math.max(kwh - 110, 0), 290);
+      if (t2 > 0) cout += t2 * 92;
+
+      const t3 = Math.min(Math.max(kwh - 400, 0), 600);
+      if (t3 > 0) cout += t3 * 99;
+    }
+    return cout;
+  }
+
+  function recalculerAppareilSingle() {
+    const usage = selectUsageApp.value;
+    const coutTotal = calculerCoutAppareil(appKwhConso, usage);
+    const coutJour = appJoursAnalyse > 0 ? (coutTotal / appJoursAnalyse) : 0;
+
+    document.getElementById('app_cout_total').textContent = Math.round(coutTotal).toLocaleString('fr');
+    document.getElementById('app_cout_par_jour').textContent = Math.round(coutJour).toLocaleString('fr');
+  }
+
+  if (selectUsageApp) {
+    selectUsageApp.addEventListener('change', recalculerAppareilSingle);
+    recalculerAppareilSingle();
+  }
+</script>
+{% endblock %}
