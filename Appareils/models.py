@@ -10,14 +10,13 @@ class Appareil(models.Model):
         ACTIVE = 'ACTIVE', 'Activé'
         DESACTIVE = 'DESACTIVE', 'Désactivé'
 
-    id_appareil = models.AutoField(
-        primary_key=True,
-        db_column="id_appareil"
-    )
+    id_appareil = models.AutoField(primary_key=True, db_column="id_appareil")
     nom = models.CharField(max_length=100)
     type_courant = models.CharField(max_length=2, choices=TypeCourant.choices)
     puissance_nominale = models.FloatField(help_text="Puissance nominale en Watts")
     statut = models.CharField(max_length=10, choices=Statut.choices, default=Statut.ACTIVE)
+    categorie = models.CharField(max_length=50, blank=True, null=True)
+    heures_par_jour = models.FloatField(blank=True, null=True)
 
     class Meta:
         db_table = 'appareils'

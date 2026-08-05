@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'Statistiques',
     'tailwind',
     'theme',
+    'rest_framework',
 
 ]
 
