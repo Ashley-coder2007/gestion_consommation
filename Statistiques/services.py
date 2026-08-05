@@ -1,10 +1,9 @@
 import calendar
 from datetime import date
 from django.db.models import Sum
-
 from Appareils.models import Appareil
 from Consommation.models import Consommation
-from Facturation.services import get_prix_kwh
+from facturation.services import get_prix_kwh
 
 COULEURS_CATEGORIE = {
     "Climatisation": "#0984e3",

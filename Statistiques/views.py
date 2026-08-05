@@ -2,7 +2,7 @@ from datetime import date
 from django.views.generic import TemplateView
 
 from . import services
-from Facturation.services import get_prix_kwh
+from facturation.services import get_prix_kwh
 
 
 class StatistiqueView(TemplateView):
