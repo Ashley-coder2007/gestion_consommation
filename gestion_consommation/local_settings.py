@@ -1,7 +1,11 @@
 # local_settings.py
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db_local_augustin.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'socadel',
+        'USER': 'postgres',
+        'PASSWORD': '1111',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
