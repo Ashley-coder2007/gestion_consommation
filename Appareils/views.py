@@ -1,46 +1,34 @@
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.views.generic import TemplateView, FormView
+from django.views.generic import ListView, FormView
 
+from .models import Appareil
 from .forms import AppareilForm
+from . import services
 
 
-# ── Données factices (mock) — à remplacer par le vrai model Appareil ──
-APPAREILS_MOCK = [
-    {"pk": 1, "nom": "Climatiseur Salon", "categorie": "Climatisation", "icone": "❄️",
-     "puissance": 1500, "heures_par_jour": 8, "actif": True,
-     "conso_kWh_mois": 360.0, "cout_mois": 41400},
-    {"pk": 2, "nom": "Réfrigérateur", "categorie": "Électroménager", "icone": "🧊",
-     "puissance": 150, "heures_par_jour": 24, "actif": True,
-     "conso_kWh_mois": 108.0, "cout_mois": 12420},
-    {"pk": 3, "nom": 'Téléviseur 55"', "categorie": "Audiovisuel", "icone": "📺",
-     "puissance": 120, "heures_par_jour": 6, "actif": True,
-     "conso_kWh_mois": 21.6, "cout_mois": 2484},
-    {"pk": 4, "nom": "Machine à laver", "categorie": "Électroménager", "icone": "🧺",
-     "puissance": 2000, "heures_par_jour": 1.5, "actif": True,
-     "conso_kWh_mois": 90.0, "cout_mois": 10350},
-    {"pk": 5, "nom": "Éclairage (8 ampoules LED)", "categorie": "Éclairage", "icone": "💡",
-     "puissance": 64, "heures_par_jour": 5, "actif": True,
-     "conso_kWh_mois": 9.6, "cout_mois": 1104},
-]
-
-
-class AppareilListView(TemplateView):
+class AppareilListView(ListView):
+    model = Appareil
     template_name = "Appareils/appareil_list.html"
+
+    def get_queryset(self):
+        qs = Appareil.objects.all()
+        filtre = self.request.GET.get("categorie")
+        if filtre:
+            qs = qs.filter(categorie=filtre)
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        qs = self.get_queryset()
         filtre = self.request.GET.get("categorie")
-        appareils = APPAREILS_MOCK
-        if filtre:
-            appareils = [a for a in appareils if a["categorie"] == filtre]
 
         context.update({
-            "appareils": appareils,
-            "categories": sorted({a["categorie"] for a in APPAREILS_MOCK}),
+            "appareils": [services.appareil_vers_dict(a) for a in qs],
+            "categories": services.liste_categories(),
             "filtre": filtre,
-            "nb_actifs": sum(1 for a in APPAREILS_MOCK if a["actif"]),
+            "nb_actifs": qs.filter(statut=Appareil.Statut.ACTIVE).count(),
             "active_nav": "appareils",
         })
         return context
@@ -58,10 +46,13 @@ class AppareilAjouterView(FormView):
         return context
 
     def form_valid(self, form):
-        # ⚠️ Démo : ne sauvegarde pas encore réellement.
-        # Une fois le model Appareil branché :
-        #   Appareil.objects.create(**form.cleaned_data)
-        messages.success(self.request, "Appareil ajouté (démo — pas encore relié à la base).")
+        services.creer_appareil(
+            nom=form.cleaned_data["nom"],
+            categorie=form.cleaned_data["categorie"],
+            puissance=form.cleaned_data["puissance"],
+            heures_par_jour=form.cleaned_data["heures_par_jour"],
+        )
+        messages.success(self.request, "Appareil ajouté.")
         return super().form_valid(form)
 
 
@@ -71,17 +62,15 @@ class AppareilModifierView(FormView):
     success_url = reverse_lazy("appareil_list")
 
     def get_appareil(self):
-        pk = self.kwargs.get("pk")
-        return next((a for a in APPAREILS_MOCK if a["pk"] == pk), APPAREILS_MOCK[0])
+        return get_object_or_404(Appareil, pk=self.kwargs.get("pk"))
 
     def get_initial(self):
-        appareil = self.get_appareil()
+        a = self.get_appareil()
         return {
-            "nom": appareil["nom"],
-            "categorie": appareil["categorie"],
-            "puissance": appareil["puissance"],
-            "heures_par_jour": appareil["heures_par_jour"],
-            "icone": appareil["icone"],
+            "nom": a.nom,
+            "categorie": a.categorie,
+            "puissance": a.puissance_nominale,
+            "heures_par_jour": a.heures_par_jour,
         }
 
     def get_context_data(self, **kwargs):
@@ -91,15 +80,26 @@ class AppareilModifierView(FormView):
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, "Appareil modifié (démo).")
+        services.modifier_appareil(
+            self.get_appareil(),
+            nom=form.cleaned_data["nom"],
+            categorie=form.cleaned_data["categorie"],
+            puissance=form.cleaned_data["puissance"],
+            heures_par_jour=form.cleaned_data["heures_par_jour"],
+        )
+        messages.success(self.request, "Appareil modifié.")
         return super().form_valid(form)
 
 
 def appareil_supprimer(request, pk):
-    messages.success(request, "Appareil supprimé (démo).")
+    a = get_object_or_404(Appareil, pk=pk)
+    a.delete()
+    messages.success(request, "Appareil supprimé.")
     return redirect("appareil_list")
 
 
 def appareil_toggle(request, pk):
-    messages.success(request, "Statut basculé (démo).")
+    a = get_object_or_404(Appareil, pk=pk)
+    services.toggle_statut(a)
+    messages.success(request, "Statut basculé.")
     return redirect("appareil_list")

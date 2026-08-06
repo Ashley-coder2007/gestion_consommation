@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}Accueil — Socadel{% endblock %}
+
+{% block content %}
+{% comment %}
+  Context attendu depuis AccueilView :
+    nb_actifs         — int
+    nb_total          — int
+    total_kWh_jour    — float
+    total_kWh_mois    — float
+    total_cout_mois   — float
+{% endcomment %}
+
+<div class="p-6 flex flex-col gap-6">
+
+  <!-- ═══ HERO ══════════════════════════════════════════════════════════════ -->
+  <div class="rounded-3xl p-8 relative overflow-hidden"
+       style="background:linear-gradient(135deg,#0a1628 0%,#0984e3 60%,#00b894 100%);min-height:190px">
+
+    <!-- Grille de points décorative -->
+    <div class="absolute inset-0 opacity-10"
+         style="background-image:radial-gradient(circle,rgba(255,255,255,.35) 1px,transparent 1px);
+                background-size:24px 24px"></div>
+
+    <div class="relative z-10">
+      <div class="text-xs font-medium mb-1"
+           style="color:rgba(255,255,255,.6);font-family:'DM Mono',monospace">
+        Bonjour — Tableau de bord
+      </div>
+      <h1 class="text-3xl font-black text-white mb-2"
+          style="font-family:'Outfit',sans-serif">
+        Votre compteur Socadel
+      </h1>
+      <p class="text-sm mb-6 max-w-md" style="color:rgba(255,255,255,.7)">
+        Surveillez votre consommation électrique en temps réel et
+        maîtrisez vos dépenses d'énergie au quotidien.
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <a href="{% url 'appareil_list' %}"
+           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+           style="background:#00b894;color:#fff;text-decoration:none">
+          🔌 Gérer les appareils
+        </a>
+        <a href="{% url 'statistique' %}"
+           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+           style="background:rgba(255,255,255,.15);color:#fff;text-decoration:none;
+                  backdrop-filter:blur(4px)">
+          📈 Voir les statistiques
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ KPI CARDS ═════════════════════════════════════════════════════════ -->
+  <div class="grid gap-4"
+       style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+
+    <!-- Conso du jour — accent -->
+    <div class="rounded-2xl p-5 flex flex-col gap-3"
+         style="background:linear-gradient(135deg,#0984e3,#00b894);color:#fff">
+      <div class="flex items-center justify-between">
+        <span class="text-2xl">⚡</span>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full"
+              style="background:rgba(255,255,255,.2)">Aujourd'hui</span>
+      </div>
+      <div>
+        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif">
+          {{ total_kWh_jour|floatformat:1 }} <span class="text-base font-semibold">kWh</span>
+        </div>
+        <div class="text-sm mt-0.5" style="opacity:.8">Consommation du jour</div>
+      </div>
+    </div>
+
+    <!-- Conso mensuelle -->
+    <div class="card rounded-2xl p-5 flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <span class="text-2xl">📅</span>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full"
+              style="background:#e2ecf4;color:#5a7080">Ce mois</span>
+      </div>
+      <div>
+        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#0984e3">
+          {{ total_kWh_mois|floatformat:0 }} <span class="text-base font-semibold">kWh</span>
+        </div>
+        <div class="text-sm mt-0.5" style="color:#5a7080">Consommation mensuelle</div>
+      </div>
+    </div>
+
+    <!-- Facture estimée -->
+    <div class="card rounded-2xl p-5 flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <span class="text-2xl">💰</span>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full"
+              style="background:#e2ecf4;color:#5a7080">Estimation</span>
+      </div>
+      <div>
+        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#00b894">
+          {{ total_cout_mois|floatformat:0 }} <span class="text-base font-semibold">FCFA</span>
+        </div>
+        <div class="text-sm mt-0.5" style="color:#5a7080">Facture mensuelle estimée</div>
+      </div>
+    </div>
+
+    <!-- Appareils actifs -->
+    <div class="card rounded-2xl p-5 flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <span class="text-2xl">🔌</span>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full"
+              style="background:#e2ecf4;color:#5a7080">Connectés</span>
+      </div>
+      <div>
+        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#0984e3">
+          {{ nb_actifs }} <span class="text-base font-normal" style="color:#5a7080">/ {{ nb_total }}</span>
+        </div>
+        <div class="text-sm mt-0.5" style="color:#5a7080">Appareils actifs</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ COURBE JOURNALIÈRE ════════════════════════════════════════════════ -->
+  <div class="card rounded-2xl p-5">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+      <div>
+        <h2 class="font-bold text-base" style="font-family:'Outfit',sans-serif">
+          Profil de consommation — aujourd'hui
+        </h2>
+        <p class="text-xs mt-0.5" style="color:#5a7080">
+          Puissance appelée estimée sur 24 heures
+        </p>
+      </div>
+      <span class="badge-active text-xs">● En direct</span>
+    </div>
+    <canvas id="chartJour" height="65"></canvas>
+  </div>
+
+  <!-- ═══ RACCOURCIS RAPIDES ════════════════════════════════════════════════ -->
+  <div class="grid grid-cols-3 gap-4">
+
+    <a href="{% url 'appareil_list' %}"
+       class="card rounded-2xl p-5 flex flex-col gap-3 text-left transition-all
+              hover:shadow-md hover:-translate-y-0.5"
+       style="text-decoration:none;color:inherit">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+           style="background:rgba(9,132,227,.1)">🔌</div>
+      <div>
+        <div class="font-semibold text-sm" style="font-family:'Outfit',sans-serif">Appareils</div>
+        <div class="text-xs mt-1" style="color:#5a7080">Gérer vos équipements</div>
+      </div>
+      <div class="text-xs font-medium mt-auto" style="color:#0984e3">Ouvrir →</div>
+    </a>
+
+    <a href="{% url 'consommation_globale' %}"
+       class="card rounded-2xl p-5 flex flex-col gap-3 text-left transition-all
+              hover:shadow-md hover:-translate-y-0.5"
+       style="text-decoration:none;color:inherit">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+           style="background:rgba(0,184,148,.1)">📊</div>
+      <div>
+        <div class="font-semibold text-sm" style="font-family:'Outfit',sans-serif">Consommation</div>
+        <div class="text-xs mt-1" style="color:#5a7080">Suivi détaillé par période</div>
+      </div>
+      <div class="text-xs font-medium mt-auto" style="color:#00b894">Ouvrir →</div>
+    </a>
+
+    <a href="{% url 'cout_global' %}"
+       class="card rounded-2xl p-5 flex flex-col gap-3 text-left transition-all
+              hover:shadow-md hover:-translate-y-0.5"
+       style="text-decoration:none;color:inherit">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+           style="background:rgba(9,132,227,.08)">🧾</div>
+      <div>
+        <div class="font-semibold text-sm" style="font-family:'Outfit',sans-serif">Facturation</div>
+        <div class="text-xs mt-1" style="color:#5a7080">Consulter vos factures</div>
+      </div>
+      <div class="text-xs font-medium mt-auto" style="color:#0984e3">Ouvrir →</div>
+    </a>
+
+  </div>
+
+  <!-- ═══ TOP 3 CONSOMMATEURS ═══════════════════════════════════════════════ -->
+  {% if top_appareils %}
+  <div class="card rounded-2xl overflow-hidden">
+    <div class="px-5 py-4 flex items-center justify-between"
+         style="border-bottom:1px solid #ccdde9">
+      <h2 class="font-bold text-base" style="font-family:'Outfit',sans-serif">
+        Top consommateurs ce mois
+      </h2>
+      <a href="{% url 'consommation_globale' %}"
+         class="text-xs font-medium" style="color:#0984e3;text-decoration:none">
+        Voir tout →
+      </a>
+    </div>
+    <div>
+      {% for row in top_appareils %}
+      <div class="px-5 py-4 flex items-center gap-4"
+           style="{% if not forloop.first %}border-top:1px solid #ccdde9{% endif %}">
+
+        <!-- Rang -->
+        <div class="w-7 h-7 rounded-full flex items-center justify-center
+                    text-xs font-black text-white shrink-0"
+             style="background:linear-gradient(135deg,#0984e3,#00b894)">
+          {{ forloop.counter }}
+        </div>
+
+        <!-- Icône -->
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
+             style="background:#e2ecf4">
+          {{ row.appareil.icone }}
+        </div>
+
+        <!-- Nom + barre -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-medium text-sm truncate">{{ row.appareil.nom }}</span>
+            <span class="text-sm font-semibold ml-3 shrink-0"
+                  style="font-family:'DM Mono',monospace;color:#0984e3">
+              {{ row.kWh|floatformat:1 }} kWh
+            </span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:{{ row.pct|floatformat:0 }}%"></div>
+          </div>
+        </div>
+
+        <!-- Coût -->
+        <div class="shrink-0 text-sm font-semibold"
+             style="font-family:'DM Mono',monospace;color:#00b894">
+          {{ row.fcfa|floatformat:0 }} FCFA
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+  /* Courbe journalière : on simule une forme de courbe typique de consommation
+     domestique (faible la nuit, pic matin et soir).
+     En prod, remplace chart_data par une vraie série depuis la vue Django.      */
+  const totalKWhJour = parseFloat("{{ total_kWh_jour|floatformat:4 }}") || 0;
+  const heures = Array.from({length: 24}, (_, h) => h + 'h');
+
+  // Profil de charge normalisé (somme ≈ 1 sur 24h)
+  const profil = [
+    .02,.02,.02,.02,.02,.02,        // 0h–5h : nuit
+    .035,.05,.055,.05,.04,.04,      // 6h–11h : matin
+    .045,.045,.04,.04,.04,.05,      // 12h–17h : après-midi
+    .055,.07,.065,.06,.04,.025      // 18h–23h : soir
+  ];
+
+  const data = profil.map(p => parseFloat((totalKWhJour * p * 24).toFixed(3)));
+
+  new Chart(document.getElementById('chartJour'), {
+    type: 'line',
+    data: {
+      labels: heures,
+      datasets: [{
+        label: 'kW',
+        data,
+        borderColor: '#0984e3',
+        backgroundColor: 'rgba(9,132,227,.1)',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        tension: .45,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.parsed.y.toFixed(3) + ' kW'
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#f0f4f8' },
+          ticks: { font: { size: 10 }, color: '#94a3b8', maxTicksLimit: 12 }
+        },
+        y: {
+          grid: { color: '#f0f4f8' },
+          ticks: { font: { size: 10 }, color: '#94a3b8' }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

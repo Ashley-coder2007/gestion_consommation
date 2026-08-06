@@ -1,21 +1,8 @@
-import json
+from datetime import date
 from django.views.generic import TemplateView
 
-APPAREILS_MOCK = [
-    {"nom": "Climatiseur Salon", "icone": "❄️", "kWh": 360.0, "fcfa": 41400, "pct": 43},
-    {"nom": "Climatiseur Chambre", "icone": "❄️", "kWh": 192.0, "fcfa": 22080, "pct": 23},
-    {"nom": "Réfrigérateur", "icone": "🧊", "kWh": 108.0, "fcfa": 12420, "pct": 13},
-    {"nom": "Machine à laver", "icone": "🧺", "kWh": 90.0, "fcfa": 10350, "pct": 11},
-    {"nom": "Ordinateur + Écran", "icone": "💻", "kWh": 59.4, "fcfa": 6831, "pct": 7},
-]
-
-CATEGORIES_MOCK = [
-    {"categorie": "Climatisation", "kWh": 549, "fcfa": 63135, "nb": 2, "pct": 65.5, "color": "#0984e3"},
-    {"categorie": "Électroménager", "kWh": 198, "fcfa": 22770, "nb": 2, "pct": 23.6, "color": "#00b894"},
-    {"categorie": "Informatique", "kWh": 59.4, "fcfa": 6831, "nb": 1, "pct": 7.1, "color": "#00cec9"},
-    {"categorie": "Audiovisuel", "kWh": 21.6, "fcfa": 2484, "nb": 1, "pct": 2.6, "color": "#74b9ff"},
-    {"categorie": "Éclairage", "kWh": 9.6, "fcfa": 1104, "nb": 1, "pct": 1.2, "color": "#55efc4"},
-]
+from . import services
+from facturation.services import get_prix_kwh
 
 
 class StatistiqueView(TemplateView):
@@ -23,25 +10,39 @@ class StatistiqueView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        today = date.today()
+        mois = int(self.request.GET.get("mois", today.month))
+        annee = int(self.request.GET.get("annee", today.year))
+
+        debut, fin = services._bornes_mois(annee, mois)
+        total_kWh_mois = services.get_total_kwh_periode(debut, fin)
+        prix_kwh = get_prix_kwh(fin)
+
+        categories_stats = services.get_categories_stats(annee, mois)
+        line_labels, line_kWh, line_fcfa = services.get_evolution_6_mois(annee, mois)
+
         context.update({
-            "nb_appareils": 8,
-            "nb_actifs": 7,
-            "total_kWh_mois": 838,
-            "total_fcfa_mois": 99174,
-            "score_efficacite": 62,
-            "evolution_pct": 5.1,
-            "par_categorie": CATEGORIES_MOCK,
-            "top_consommateurs": [
-                {"appareil": {"nom": a["nom"], "icone": a["icone"]}, "kWh": a["kWh"], "fcfa": a["fcfa"], "pct": a["pct"]}
-                for a in APPAREILS_MOCK
-            ],
-            "line_labels": json.dumps(["Fév", "Mar", "Avr", "Mai", "Jun", "Jul"]),
-            "line_kWh": json.dumps([203, 219, 241, 254, 268, 254]),
-            "line_fcfa": json.dumps([28545, 30585, 33165, 34830, 36420, 34830]),
-            "bar_cat_labels": json.dumps([c["categorie"] for c in CATEGORIES_MOCK]),
-            "bar_cat_kWh": json.dumps([c["kWh"] for c in CATEGORIES_MOCK]),
-            "pie_labels": json.dumps([c["categorie"] for c in CATEGORIES_MOCK]),
-            "pie_data": json.dumps([c["kWh"] for c in CATEGORIES_MOCK]),
+            "total_kWh_mois": total_kWh_mois,
+            "total_fcfa_mois": round(total_kWh_mois * prix_kwh),
+            "evolution_pct": services.get_evolution_pct(annee, mois),
+            "score_efficacite": services.get_score_efficacite(annee, mois),
+
+            "mois_liste": services.liste_mois(),
+            "annees_liste": services.liste_annees(),
+            "mois_selectionne": mois,
+            "annee_selectionnee": annee,
+            "nom_mois_selectionne": dict(services.MOIS_NOMS).get(mois, ""),
+
+            "categories_stats": categories_stats,
+
+            "chart_labels": __import__("json").dumps(line_labels),
+            "chart_kwh_data": __import__("json").dumps(line_kWh),
+            "chart_fcfa_data": __import__("json").dumps(line_fcfa),
+
+            "donut_labels": __import__("json").dumps([c["nom"] for c in categories_stats]),
+            "donut_data": __import__("json").dumps([c["kWh"] for c in categories_stats]),
+            "donut_colors": __import__("json").dumps([c["color"] for c in categories_stats]),
+
             "active_nav": "statistiques",
         })
         return context

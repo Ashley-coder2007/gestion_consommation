@@ -1,32 +1,14 @@
 import json
 from django.views.generic import TemplateView
+from django.shortcuts import get_object_or_404
+
+from Appareils.models import Appareil
+from Appareils.services import appareil_vers_dict
+from Consommation import services as conso_services
+from . import services
 
 PERIODES = [("jour", "Aujourd'hui"), ("semaine", "7 derniers jours"),
             ("mois", "30 derniers jours"), ("personnalise", "Période personnalisée")]
-
-APPAREILS_MOCK = [
-    {"pk": 1, "nom": "Climatiseur Salon", "categorie": "Climatisation", "icone": "❄️", "puissance": 1500, "heures_par_jour": 8},
-    {"pk": 2, "nom": "Réfrigérateur", "categorie": "Électroménager", "icone": "🧊", "puissance": 150, "heures_par_jour": 24},
-    {"pk": 3, "nom": 'Téléviseur 55"', "categorie": "Audiovisuel", "icone": "📺", "puissance": 120, "heures_par_jour": 6},
-    {"pk": 4, "nom": "Machine à laver", "categorie": "Électroménager", "icone": "🧺", "puissance": 2000, "heures_par_jour": 1.5},
-    {"pk": 5, "nom": "Éclairage (8 ampoules LED)", "categorie": "Éclairage", "icone": "💡", "puissance": 64, "heures_par_jour": 5},
-]
-
-TARIF = 115
-ABONNEMENT = 2000
-
-HISTORIQUE_MOCK = [
-    {"mois": "Jul 2025", "kWh": 254, "fcfa": 34830, "statut": "payée"},
-    {"mois": "Jun 2025", "kWh": 268, "fcfa": 36420, "statut": "payée"},
-    {"mois": "Mai 2025", "kWh": 241, "fcfa": 33165, "statut": "payée"},
-    {"mois": "Avr 2025", "kWh": 219, "fcfa": 30585, "statut": "payée"},
-    {"mois": "Mar 2025", "kWh": 203, "fcfa": 28545, "statut": "payée"},
-    {"mois": "Fév 2025", "kWh": 187, "fcfa": 26205, "statut": "payée"},
-]
-
-
-def _jours_pour_mode(mode):
-    return {"jour": 1, "semaine": 7, "mois": 30, "personnalise": 7}.get(mode, 30)
 
 
 class CoutGlobalView(TemplateView):
@@ -35,22 +17,29 @@ class CoutGlobalView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         mode = self.request.GET.get("mode", "mois")
-        jours = _jours_pour_mode(mode)
+        start_date, end_date, jours = conso_services.bornes_periode(self.request, mode)
+
+        appareils_qs = Appareil.objects.all()
+        conso_par_appareil = conso_services.get_consommation_par_appareil(appareils_qs, start_date, end_date)
 
         rows = []
         total_kWh = 0
-        for a in APPAREILS_MOCK:
-            kwh = round((a["puissance"] * a["heures_par_jour"] / 1000) * jours, 2)
-            rows.append({"appareil": a, "conso_kWh": kwh, "cout_fcfa": round(kwh * TARIF)})
+        for a in appareils_qs:
+            kwh = round(conso_par_appareil.get(a.pk, 0) or 0, 2)
+            rows.append({
+                "appareil": appareil_vers_dict(a),
+                "conso_kWh": kwh,
+                "cout_fcfa": services.calculer_cout_energie(kwh),
+            })
             total_kWh += kwh
 
-        total_energie = round(total_kWh * TARIF)
-        total_facture = total_energie + ABONNEMENT
+        total_energie = services.calculer_cout_energie(total_kWh)
+        total_facture = total_energie + services.ABONNEMENT
 
         context.update({
             "appareils": rows,
             "total_energie": total_energie,
-            "abonnement": ABONNEMENT,
+            "abonnement": services.ABONNEMENT,
             "total_facture": total_facture,
             "total_kWh": total_kWh,
             "jours": jours,
@@ -59,10 +48,10 @@ class CoutGlobalView(TemplateView):
             "date_fin": self.request.GET.get("date_fin", ""),
             "label_periode": dict(PERIODES).get(mode, ""),
             "periodes": PERIODES,
-            "tarif": TARIF,
-            "historique": HISTORIQUE_MOCK,
-            "chart_labels": json.dumps([h["mois"] for h in reversed(HISTORIQUE_MOCK)]),
-            "chart_data": json.dumps([h["fcfa"] for h in reversed(HISTORIQUE_MOCK)]),
+            "tarif": services.get_prix_kwh(),
+            "historique": services.get_historique_global(),
+            "chart_labels": json.dumps([h["mois"] for h in reversed(services.get_historique_global())]),
+            "chart_data": json.dumps([h["fcfa"] for h in reversed(services.get_historique_global())]),
             "active_nav": "facturation",
         })
         return context
@@ -73,16 +62,17 @@ class CoutAppareilView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        pk = kwargs.get("pk")
-        appareil = next((a for a in APPAREILS_MOCK if a["pk"] == pk), APPAREILS_MOCK[0])
+        a = get_object_or_404(Appareil, pk=kwargs.get("pk"))
+        appareil = appareil_vers_dict(a)
 
         mode = self.request.GET.get("mode", "semaine")
-        jours = _jours_pour_mode(mode)
+        start_date, end_date, jours = conso_services.bornes_periode(self.request, mode)
 
-        conso_jour = round(appareil["puissance"] * appareil["heures_par_jour"] / 1000, 3)
-        conso_kWh = round(conso_jour * jours, 3)
-        cout_fcfa = round(conso_kWh * TARIF)
-        cout_jour = round(conso_jour * TARIF)
+        conso_kWh = conso_services.get_consommation_totale(a, start_date, end_date)
+        conso_jour = round(conso_kWh / jours, 3) if jours else 0
+        cout_fcfa = services.calculer_cout_energie(conso_kWh)
+        cout_jour = services.calculer_cout_energie(conso_jour)
+        prix_kwh = services.get_prix_kwh()
 
         context.update({
             "appareil": appareil,
@@ -97,12 +87,12 @@ class CoutAppareilView(TemplateView):
             "cout_jour": cout_jour,
             "cout_mois_est": cout_jour * 30,
             "cout_an_est": cout_jour * 365,
-            "tarif": TARIF,
+            "tarif": prix_kwh,
             "detail_calcul": [
                 {"label": "Puissance nominale", "valeur": f'{appareil["puissance"]} W'},
                 {"label": "Usage quotidien", "valeur": f'{appareil["heures_par_jour"]} h/j'},
                 {"label": "Consommation / jour", "valeur": f"{conso_jour} kWh/j", "color": "#0984e3"},
-                {"label": "Tarif Socadel", "valeur": f"{TARIF} FCFA/kWh"},
+                {"label": "Tarif Socadel", "valeur": f"{prix_kwh} FCFA/kWh"},
                 {"label": "Coût sur la période", "valeur": f"{cout_fcfa} FCFA", "color": "#00b894"},
             ],
             "chart_labels": json.dumps([f"J{i+1}" for i in range(jours)]),
