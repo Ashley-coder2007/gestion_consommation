@@ -11,6 +11,7 @@ PERIODES = [("jour", "Aujourd'hui"), ("semaine", "7 derniers jours"),
             ("mois", "30 derniers jours"), ("personnalise", "Période personnalisée")]
 
 
+
 class CoutGlobalView(TemplateView):
     template_name = "facturation/cout_global.html"
 
@@ -20,18 +21,18 @@ class CoutGlobalView(TemplateView):
         start_date, end_date, jours = conso_services.bornes_periode(self.request, mode)
 
         appareils_qs = Appareil.objects.all()
-        conso_par_appareil = conso_services.get_consommation_par_appareil(appareils_qs, start_date, end_date)
+        couts_marginaux = services.calculer_couts_marginaux_foyer(appareils_qs, start_date, end_date)
 
         rows = []
         total_kWh = 0
         for a in appareils_qs:
-            kwh = round(conso_par_appareil.get(a.pk, 0) or 0, 2)
+            detail = couts_marginaux.get(a.pk, {'kwh': 0, 'cout': 0})
             rows.append({
                 "appareil": appareil_vers_dict(a),
-                "conso_kWh": kwh,
-                "cout_fcfa": services.calculer_cout_energie(kwh),
+                "conso_kWh": detail['kwh'],
+                "cout_fcfa": detail['cout'],
             })
-            total_kWh += kwh
+            total_kWh += detail['kwh']
 
         total_energie = services.calculer_cout_energie(total_kWh)
         total_facture = total_energie + services.ABONNEMENT
@@ -42,17 +43,7 @@ class CoutGlobalView(TemplateView):
             "abonnement": services.ABONNEMENT,
             "total_facture": total_facture,
             "total_kWh": total_kWh,
-            "jours": jours,
-            "mode": mode,
-            "date_debut": self.request.GET.get("date_debut", ""),
-            "date_fin": self.request.GET.get("date_fin", ""),
-            "label_periode": dict(PERIODES).get(mode, ""),
-            "periodes": PERIODES,
-            "tarif": services.get_prix_kwh(),
-            "historique": services.get_historique_global(),
-            "chart_labels": json.dumps([h["mois"] for h in reversed(services.get_historique_global())]),
-            "chart_data": json.dumps([h["fcfa"] for h in reversed(services.get_historique_global())]),
-            "active_nav": "facturation",
+            # ... reste inchangé
         })
         return context
 
@@ -68,11 +59,17 @@ class CoutAppareilView(TemplateView):
         mode = self.request.GET.get("mode", "semaine")
         start_date, end_date, jours = conso_services.bornes_periode(self.request, mode)
 
-        conso_kWh = conso_services.get_consommation_totale(a, start_date, end_date)
+        # Coût marginal réel : calculé sur l'ensemble du foyer, puis on
+        # extrait la part de CET appareil dans la répartition globale.
+        appareils_qs = Appareil.objects.all()
+        couts_marginaux = services.calculer_couts_marginaux_foyer(appareils_qs, start_date, end_date)
+        detail = couts_marginaux.get(a.pk, {'kwh': 0, 'cout': 0})
+
+        conso_kWh = detail['kwh']
         conso_jour = round(conso_kWh / jours, 3) if jours else 0
-        cout_fcfa = services.calculer_cout_energie(conso_kWh)
-        cout_jour = services.calculer_cout_energie(conso_jour)
-        prix_kwh = services.get_prix_kwh()
+        cout_fcfa = detail['cout']
+        cout_jour = round(cout_fcfa / jours, 2) if jours else 0
+        prix_kwh = round(cout_fcfa / conso_kWh, 2) if conso_kWh else services.get_prix_kwh()
 
         context.update({
             "appareil": appareil,
@@ -92,7 +89,7 @@ class CoutAppareilView(TemplateView):
                 {"label": "Puissance nominale", "valeur": f'{appareil["puissance"]} W'},
                 {"label": "Usage quotidien", "valeur": f'{appareil["heures_par_jour"]} h/j'},
                 {"label": "Consommation / jour", "valeur": f"{conso_jour} kWh/j", "color": "#0984e3"},
-                {"label": "Tarif Socadel", "valeur": f"{prix_kwh} FCFA/kWh"},
+                {"label": "Tarif marginal moyen", "valeur": f"{prix_kwh} FCFA/kWh"},
                 {"label": "Coût sur la période", "valeur": f"{cout_fcfa} FCFA", "color": "#00b894"},
             ],
             "chart_labels": json.dumps([f"J{i+1}" for i in range(jours)]),

@@ -152,3 +152,4 @@ def get_score_efficacite(annee, mois):
     ecart_pct = (total_courant - moyenne_historique) / moyenne_historique * 100
     score = 100 - ecart_pct
     return max(0, min(100, round(score)))
+

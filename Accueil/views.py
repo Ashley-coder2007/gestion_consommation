@@ -10,7 +10,7 @@ class AccueilView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        actifs = list(Appareil.objects.filter(actif=True))
+        actifs = list(Appareil.objects.filter(statut=Appareil.Statut.ACTIVE))
 
         total_kWh_mois = sum(a.conso_kWh_mois for a in actifs)
 

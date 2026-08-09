@@ -1,40 +1,19 @@
-"""
-URL configuration for gestion_consommation project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-# gestion_consommation/urls.py
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import RedirectView
+from Accueil.views import AccueilView
 
 urlpatterns = [
-
+    path('', AccueilView.as_view(), name='accueil'),
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='/appareils/', permanent=False), name='accueil'),
-
     path('', include('Appareils.urls')),
     path('', include('Consommation.urls')),
     path('', include('facturation.urls')),
     path('', include('Statistiques.urls')),
 ]
 
-
 if settings.DEBUG:
-    # Include django_browser_reload URLs only in DEBUG mode
     urlpatterns += [
         path("__reload__/", include("django_browser_reload.urls")),
     ]
