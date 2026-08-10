@@ -1,4 +1,5 @@
 {% load tailwind_tags %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -17,7 +18,7 @@
   <style>
     body { background:#f0f4f8; color:#0a1628; font-family:'DM Sans',sans-serif; overflow: hidden; height: 100vh;}
     ::-webkit-scrollbar { width:5px; height: 5px;}
-    ::-webkit-scrollbar-thumb { background:rgba(9,132,227,.25); border-radius:3px; }
+    ::-webkit-scrollbar-thumb { background:rgba(14,106,167,.25); border-radius:3px; }
 
     .sidebar-link {
       display:flex; align-items:center; gap:12px;
@@ -29,14 +30,14 @@
     }
     .sidebar-link:hover  { background:rgba(255,255,255,.06); color:rgba(255,255,255,.85); }
     .sidebar-link.active {
-      background:linear-gradient(90deg,rgba(9,132,227,.3),rgba(0,184,148,.15));
-      border-left-color:#00b894; color:#fff;
+      background:linear-gradient(90deg,rgba(14,106,167,.3),rgba(152,197,22,.15));
+      border-left-color:#98C516; color:#fff;
     }
     .btn-primary {
       display:inline-flex; align-items:center; gap:6px;
       padding:10px 20px; border-radius:12px; font-size:.875rem;
       font-weight:600; border:none; cursor:pointer;
-      background:linear-gradient(135deg,#0984e3,#00b894); color:#fff;
+      background:linear-gradient(135deg,#0E6AA7,#98C516); color:#fff;
       transition:opacity .2s,transform .15s;
     }
     .btn-primary:hover { opacity:.9; transform:scale(1.02); }
@@ -49,7 +50,7 @@
     }
     .btn-secondary:hover { background:#f0f4f8; }
     .card { background:#fff; border:1px solid #ccdde9; border-radius:16px; overflow: hidden;}
-    .stat-accent { background:linear-gradient(135deg,#0984e3,#00b894) !important; color:#fff !important; border:none !important; }
+    .stat-accent { background:linear-gradient(135deg,#0E6AA7,#98C516) !important; color:#fff !important; border:none !important; }
 
     label { display:block; font-size:.75rem; font-weight:500; color:#5a7080; margin-bottom:6px; }
     input[type=text],input[type=number],input[type=date],select,textarea {
@@ -59,13 +60,17 @@
       transition:border-color .2s,box-shadow .2s;
     }
     input:focus,select:focus,textarea:focus {
-      border-color:#0984e3; box-shadow:0 0 0 3px rgba(9,132,227,.15);
+      border-color:#0E6AA7; box-shadow:0 0 0 3px rgba(14,106,167,.15);
     }
-    .badge-active   { background:rgba(0,184,148,.12); color:#00b894; padding:3px 10px; border-radius:999px; font-size:.75rem; font-weight:600; display: inline-flex; align-items: center; gap: 4px;}
+    .badge-active   { background:rgba(152,197,22,.12); color:#98C516; padding:3px 10px; border-radius:999px; font-size:.75rem; font-weight:600; display: inline-flex; align-items: center; gap: 4px;}
     .badge-inactive { background:rgba(203,213,225,.4); color:#94a3b8; padding:3px 10px; border-radius:999px; font-size:.75rem; font-weight:600; display: inline-flex; align-items: center; gap: 4px;}
 
     /* Conteneurs de graphiques */
     .chart-box { position:relative; width:100%; }
+
+    /* Logo dans la sidebar */
+    .sidebar-logo { width:100%; max-width:150px; height:auto; display:block; }
+    .sidebar-logo-mobile { height:24px; width:auto; display:block; }
 
     /* Mobile Sidebar Toggle */
     #mobile-menu-toggle { display: none; }
@@ -94,49 +99,40 @@
 <aside class="flex flex-col h-full shrink-0"
        style="width:240px;background:linear-gradient(180deg,#0a1628,#102040);border-right:1px solid rgba(255,255,255,.06)">
 
-  <!-- Header Sidebar avec le Logo Éclair (Bloc Cyan / Électricité) -->
-  <div class="px-6 py-6" style="border-bottom:1px solid rgba(255,255,255,.06)">
-    <div class="flex items-center gap-3">
-      <!-- Icone Logo Électricité -->
-      <div style="width:40px; height:40px; background:linear-gradient(135deg, #00b894, #00a8ff); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#ffffff; font-size:20px; font-weight:bold; flex-shrink:0; box-shadow:0 4px 12px rgba(0, 168, 255, 0.3);">
-        ⚡
-      </div>
-      <div>
-        <div class="text-white text-base font-extrabold" style="font-family:'Outfit',sans-serif; letter-spacing: 0.3px;">Socadel</div>
-        <div class="text-xs" style="color:rgba(255,255,255,.4);font-family:'DM Mono',monospace">énergie intelligente</div>
-      </div>
-    </div>
+  <!-- Header Sidebar avec Logo -->
+  <div class="px-6 py-6 flex items-center justify-center" style="border-bottom:1px solid rgba(255,255,255,.06)">
+    <img src="{% static 'images/logo-socadel.png' %}" alt="Socadel" class="sidebar-logo" />
   </div>
 
   <div class="mx-4 mt-4 px-4 py-3 rounded-xl"
-       style="background:rgba(9,132,227,.12);border:1px solid rgba(9,132,227,.2)">
+       style="background:rgba(14,106,167,.12);border:1px solid rgba(14,106,167,.2)">
     <div class="text-xs" style="color:rgba(255,255,255,.5);margin-bottom:2px">Compteur N°</div>
     <div class="text-white text-sm font-bold" style="font-family:'DM Mono',monospace">
       {{ compteur_numero|default:"CM-YDE-2024-0847" }}
     </div>
-    <div class="text-xs mt-1" style="color:#00b894">● Connecté</div>
+    <div class="text-xs mt-1" style="color:#98C516"><i class="fa-solid fa-circle" style="font-size:6px;"></i> Connecté</div>
   </div>
 
   <nav class="flex-1 px-3 mt-5 space-y-1">
     <a href="{% url 'accueil' %}"
        class="sidebar-link {% if active_nav == 'accueil' %}active{% endif %}">
-      <span>⚡</span> Accueil
+      <i class="fa-solid fa-house" style="width:16px;text-align:center;"></i> Accueil
     </a>
     <a href="{% url 'appareil_list' %}"
        class="sidebar-link {% if active_nav == 'appareils' %}active{% endif %}">
-      <span>🔌</span> Appareils
+      <i class="fa-solid fa-plug" style="width:16px;text-align:center;"></i> Appareils
     </a>
     <a href="{% url 'consommation_globale' %}"
        class="sidebar-link {% if active_nav == 'consommation' %}active{% endif %}">
-      <span>📊</span> Consommation
+      <i class="fa-solid fa-chart-column" style="width:16px;text-align:center;"></i> Consommation
     </a>
     <a href="{% url 'cout_global' %}"
        class="sidebar-link {% if active_nav == 'facturation' %}active{% endif %}">
-      <span>🧾</span> Facturation
+      <i class="fa-solid fa-file-invoice-dollar" style="width:16px;text-align:center;"></i> Facturation
     </a>
     <a href="{% url 'statistique' %}"
        class="sidebar-link {% if active_nav == 'statistiques' %}active{% endif %}">
-      <span>📈</span> Statistiques
+      <i class="fa-solid fa-chart-line" style="width:16px;text-align:center;"></i> Statistiques
     </a>
   </nav>
 
@@ -150,13 +146,8 @@
 
     <!-- Menu Hamburger Mobile -->
     <div class="lg:hidden p-4 bg-white border-b border-[#ccdde9] flex items-center justify-between">
-      <button id="mobile-menu-toggle" class="text-2xl p-1 rounded-lg">☰</button>
-      <div class="flex items-center gap-2">
-        <div style="width:28px; height:28px; background:linear-gradient(135deg, #00b894, #00a8ff); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#ffffff; font-size:14px;">
-          ⚡
-        </div>
-        <span class="font-bold text-sm">Socadel</span>
-      </div>
+      <button id="mobile-menu-toggle" class="text-2xl p-1 rounded-lg"><i class="fa-solid fa-bars"></i></button>
+      <img src="{% static 'images/logo-socadel.png' %}" alt="Socadel" class="sidebar-logo-mobile" />
     </div>
 
     <!-- Zone de contenu propre -->

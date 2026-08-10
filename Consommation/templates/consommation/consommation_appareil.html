@@ -5,7 +5,7 @@
 
 {% block header_actions %}
 <a href="{% url 'consommation_globale' %}" class="btn-secondary" style="text-decoration:none">
-  📊 <span class="hidden sm:inline">Voir la vue globale</span><span class="sm:hidden">Vue globale</span>
+  <i class="fa-solid fa-chart-column"></i> <span class="hidden sm:inline">Voir la vue globale</span><span class="sm:hidden">Vue globale</span>
 </a>
 {% endblock %}
 
@@ -79,7 +79,7 @@
     <!-- Bloc 1 : Consommation -->
     <div style="background: linear-gradient(135deg, #0984e3 0%, #00b894 100%); color: #ffffff; padding: 20px; border-radius: 16px; height: 130px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,184,148,0.15);">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-size: 20px;">⚡</div>
+        <div style="font-size: 20px;"><i class="fa-solid fa-bolt"></i></div>
         <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: rgba(255,255,255,0.25); color: #ffffff;">Jour</span>
       </div>
       <div>
@@ -93,7 +93,7 @@
     <!-- Bloc 2 : Coût total (Dynamique) -->
     <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 20px; border-radius: 16px; height: 130px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-size: 20px;">💰</div>
+        <div style="font-size: 20px;"><i class="fa-solid fa-sack-dollar"></i></div>
         <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #e2ecf4; color: #5a7080;">Énergie</span>
       </div>
       <div>
@@ -107,7 +107,7 @@
     <!-- Bloc 3 : Moyenne jour -->
     <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 20px; border-radius: 16px; height: 130px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-size: 20px;">📊</div>
+        <div style="font-size: 20px;"><i class="fa-solid fa-chart-line"></i></div>
         <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #e2ecf4; color: #5a7080;">Par jour</span>
       </div>
       <div>
@@ -121,7 +121,7 @@
     <!-- Bloc 4 : Coût moyen jour (Dynamique) -->
     <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 20px; border-radius: 16px; height: 130px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-size: 20px;">🗓️</div>
+        <div style="font-size: 20px;"><i class="fa-solid fa-calendar-days"></i></div>
         <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #e2ecf4; color: #5a7080;">Moyenne</span>
       </div>
       <div>

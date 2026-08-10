@@ -89,7 +89,7 @@
 
     <div style="background: linear-gradient(135deg, #0984e3 0%, #00b894 100%); color: #ffffff; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 18px;">⚡</span>
+        <span style="font-size: 18px;"><i class="fa-solid fa-bolt"></i></span>
         <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.25);">Énergie</span>
       </div>
       <div>
@@ -102,7 +102,7 @@
 
     <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 18px;">📋</span>
+        <span style="font-size: 18px;"><i class="fa-solid fa-clipboard"></i></span>
         <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: #e2ecf4; color: #5a7080;">Fixe</span>
       </div>
       <div>
@@ -115,7 +115,7 @@
 
     <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 18px;">🏆</span>
+        <span style="font-size: 18px;"><i class="fa-solid fa-trophy"></i></span>
         <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: #e2ecf4; color: #5a7080;">Global</span>
       </div>
       <div>
@@ -128,7 +128,7 @@
 
     <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 18px;">📊</span>
+        <span style="font-size: 18px;"><i class="fa-solid fa-chart-simple"></i></span>
         <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: #e2ecf4; color: #5a7080;">Barème</span>
       </div>
       <div>
@@ -150,7 +150,7 @@
     <!-- Ligne Abonnement -->
     <div style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2ecf4; flex-wrap: wrap; gap: 8px;">
       <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 36px; height: 36px; border-radius: 10px; background: #e2ecf4; display: flex; align-items: center; justify-content: center;">📋</div>
+        <div style="width: 36px; height: 36px; border-radius: 10px; background: #e2ecf4; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-clipboard"></i></div>
         <div>
           <div style="font-weight: 600; font-size: 13px; color: #0a1628;">Abonnement mensuel</div>
           <div style="font-size: 11px; color: #5a7080;">Frais fixes Socadel</div>
@@ -211,7 +211,7 @@
           <span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
                        background: {% if h.statut == 'payée' %}#e6f9f5{% else %}#fff4e5{% endif %};
                        color: {% if h.statut == 'payée' %}#00b894{% else %}#e17055{% endif %};">
-            {% if h.statut == 'payée' %}✓ Payée{% else %}⏳ En attente{% endif %}
+            {% if h.statut == 'payée' %}<i class="fa-solid fa-check"></i> Payée{% else %}<i class="fa-regular fa-clock"></i> En attente{% endif %}
           </span>
         </div>
       </div>
@@ -296,7 +296,6 @@
     const coutEnergie = calculerEnergieGlobal(totalKwhGlobal, usage);
     const totalFacture = coutEnergie + abonnement;
 
-    // Mise à jour des cartes et bannières
     document.getElementById('facture_total_banner').textContent = Math.round(totalFacture).toLocaleString('fr');
     document.getElementById('facture_total_stat').textContent = Math.round(totalFacture).toLocaleString('fr');
     document.getElementById('facture_total_bottom').textContent = Math.round(totalFacture).toLocaleString('fr');
@@ -304,7 +303,6 @@
     document.getElementById('facture_abonnement_stat').textContent = abonnement.toLocaleString('fr');
     document.getElementById('row_abonnement_valeur').textContent = abonnement.toLocaleString('fr');
 
-    // Répartition des coûts par appareil au prorata
     const costElements = document.querySelectorAll('.app_calculated_cost');
     const percentElements = document.querySelectorAll('.part_pourcentage');
 

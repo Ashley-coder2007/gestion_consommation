@@ -32,7 +32,8 @@ class ConsommationGlobaleView(TemplateView):
                 "cout_fcfa": services.calculer_cout_tranches(kwh),
             })
             total_kWh += kwh
-            puissance_totale += a.puissance_nominale
+            if a.statut == Appareil.Statut.ACTIVE:
+                puissance_totale += a.puissance_nominale
 
         for row in rows:
             row["pct"] = (row["conso_kWh"] / total_kWh * 100) if total_kWh else 0

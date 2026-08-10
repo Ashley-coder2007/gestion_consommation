@@ -11,12 +11,9 @@
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
     --text-sm--line-height: calc(1.25 / 0.875);
-    --text-base: 1rem;
-    --text-base--line-height: calc(1.5 / 1);
     --text-2xl: 1.5rem;
     --text-2xl--line-height: calc(2 / 1.5);
     --font-weight-bold: 700;
-    --font-weight-extrabold: 800;
     --radius-lg: 0.5rem;
     --radius-xl: 0.75rem;
     --default-transition-duration: 150ms;
@@ -176,6 +173,9 @@
   }
 }
 @layer utilities {
+  .static {
+    position: static;
+  }
   .mx-4 {
     margin-inline: calc(var(--spacing) * 4);
   }
@@ -215,11 +215,8 @@
   .justify-between {
     justify-content: space-between;
   }
-  .gap-2 {
-    gap: calc(var(--spacing) * 2);
-  }
-  .gap-3 {
-    gap: calc(var(--spacing) * 3);
+  .justify-center {
+    justify-content: center;
   }
   :where(.space-y-1 > :not(:last-child)) {
     --tw-space-y-reverse: 0;
@@ -278,10 +275,6 @@
     font-size: var(--text-2xl);
     line-height: var(--tw-leading, var(--text-2xl--line-height));
   }
-  .text-base {
-    font-size: var(--text-base);
-    line-height: var(--tw-leading, var(--text-base--line-height));
-  }
   .text-sm {
     font-size: var(--text-sm);
     line-height: var(--tw-leading, var(--text-sm--line-height));
@@ -293,10 +286,6 @@
   .font-bold {
     --tw-font-weight: var(--font-weight-bold);
     font-weight: var(--font-weight-bold);
-  }
-  .font-extrabold {
-    --tw-font-weight: var(--font-weight-extrabold);
-    font-weight: var(--font-weight-extrabold);
   }
   .text-white {
     color: var(--color-white);

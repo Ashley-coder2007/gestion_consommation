@@ -154,8 +154,8 @@
             <!-- Actions -->
             <td style="padding: 14px 20px; text-align: right;">
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                <a href="{% url 'appareil_modifier' a.pk %}" style="text-decoration: none; font-size: 14px; opacity: 0.6;" title="Modifier">✏️</a>
-                <a href="{% url 'appareil_supprimer' a.pk %}" style="text-decoration: none; font-size: 14px; opacity: 0.6;" title="Supprimer" onclick="return confirm('Supprimer {{ a.nom }} ?')">🗑️</a>
+                <a href="{% url 'appareil_modifier' a.pk %}" style="text-decoration: none; font-size: 14px; opacity: 0.6;" title="Modifier"><i class="fa-solid fa-pen"></i></a>
+                <a href="{% url 'appareil_supprimer' a.pk %}" style="text-decoration: none; font-size: 14px; opacity: 0.6;" title="Supprimer" onclick="return confirm('Supprimer {{ a.nom }} ?')"><i class="fa-solid fa-trash"></i></a>
               </div>
             </td>
           </tr>
