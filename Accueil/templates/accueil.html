@@ -3,224 +3,224 @@
 {% block title %}Accueil — Socadel{% endblock %}
 
 {% block content %}
-{% comment %}
-  Contexte attendu depuis AccueilView :
-    nb_actifs         — int
-    nb_total          — int
-    total_kWh_jour    — float
-    total_kWh_mois    — float
-    total_cout_mois   — float
-{% endcomment %}
+<style>
+  /* ══ Styles autonomes Socadel (aucune dépendance Tailwind) ══ */
+  .sd-wrap{display:flex;flex-direction:column;gap:24px;padding:24px;max-width:1400px;margin:0 auto}
 
-<div class="flex flex-col gap-6">
+  /* ── HERO ── */
+  .sd-hero{border-radius:24px;padding:36px 40px;position:relative;overflow:hidden;
+           background:linear-gradient(115deg,#0a1628 0%,#0984e3 55%,#00b894 100%)}
+  .sd-hello{font-size:12px;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace;margin-bottom:10px}
+  .sd-title{font-size:32px;font-weight:800;color:#fff;margin:0 0 10px;font-family:'Outfit',sans-serif;line-height:1.15}
+  .sd-sub{font-size:14px;color:rgba(255,255,255,.75);max-width:540px;margin:0 0 26px;line-height:1.6}
+  .sd-hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+  .sd-btn{display:inline-block;padding:11px 22px;border-radius:12px;font-size:14px;font-weight:600;
+          color:#fff;text-decoration:none;transition:opacity .15s}
+  .sd-btn:hover{opacity:.9}
+  .sd-btn-green{background:#00b894}
+  .sd-btn-ghost{background:rgba(255,255,255,.15);backdrop-filter:blur(4px)}
 
-  <!-- ═══ HERO ═══════════════════════════════════════════════════════════ -->
-  <div class="rounded-3xl px-8 py-9 relative overflow-hidden"
-       style="background:linear-gradient(115deg,#0a1628 0%,#0984e3 55%,#00b894 100%);min-height:210px">
-    <div class="relative z-10">
-      <div class="text-xs font-medium mb-2"
-           style="color:rgba(255,255,255,.6);font-family:'DM Mono',monospace">
-        Bonjour, {{ request.user.get_full_name|default:request.user.username }}
-      </div>
-      <h1 class="text-3xl md:text-4xl font-black text-white mb-3"
-          style="font-family:'Outfit',sans-serif">
-        Votre tableau de bord
-      </h1>
-      <p class="text-sm mb-7 max-w-lg" style="color:rgba(255,255,255,.75)">
-        Surveillez votre consommation électrique en temps réel et optimisez
-        vos dépenses d'énergie avec Socadel.
-      </p>
-      <div class="flex flex-wrap gap-3">
-        <a href="{% url 'appareil_list' %}"
-           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-           style="background:#00b894;color:#fff;text-decoration:none">
-          Gérer les appareils
-        </a>
-        <a href="{% url 'statistique' %}"
-           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-           style="background:rgba(255,255,255,.15);color:#fff;text-decoration:none;backdrop-filter:blur(4px)">
-          Voir les statistiques
-        </a>
-      </div>
+  /* ── KPI CARDS (4 colonnes) ── */
+  .sd-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+  .sd-kpi{border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;
+          background:#fff;border:1px solid #e3ecf3;box-shadow:0 1px 3px rgba(16,42,67,.05)}
+  .sd-kpi-accent{background:linear-gradient(135deg,#0984e3,#00b894);border:none;color:#fff}
+  .sd-kpi-top{display:flex;align-items:center;justify-content:space-between}
+  .sd-kpi-icon{font-size:22px;line-height:1}
+  .sd-badge{font-size:11px;font-weight:600;padding:5px 12px;border-radius:999px;
+            background:#e8eef4;color:#64748b;white-space:nowrap}
+  .sd-badge-light{background:rgba(255,255,255,.2);color:#fff}
+  .sd-kpi-value{font-size:26px;font-weight:800;color:#16223a;font-family:'Outfit',sans-serif;letter-spacing:-.3px}
+  .sd-unit{font-size:15px;font-weight:600}
+  .sd-white{color:#fff}
+  .sd-kpi-label{font-size:13px;color:#64748b;margin-top:5px}
+  .sd-label-light{color:rgba(255,255,255,.85)}
+
+  /* ── CARTES GÉNÉRIQUES ── */
+  .sd-card{background:#fff;border:1px solid #e3ecf3;border-radius:16px;box-shadow:0 1px 3px rgba(16,42,67,.05)}
+  .sd-card-title{font-size:16px;font-weight:700;color:#16223a;margin:0;font-family:'Outfit',sans-serif}
+  .sd-card-sub{font-size:12px;color:#64748b;margin:4px 0 0}
+
+  /* ── GRAPHIQUE ── */
+  .sd-chart{padding:20px}
+  .sd-chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+                 margin-bottom:16px;flex-wrap:wrap}
+  .sd-live{font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;
+           background:#d9f3e5;color:#18a069;white-space:nowrap}
+  .sd-chart-body{position:relative;height:280px}
+
+  /* ── RACCOURCIS (3 colonnes) ── */
+  .sd-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .sd-shortcut{display:flex;flex-direction:column;gap:12px;padding:20px;text-decoration:none;
+               color:inherit;transition:box-shadow .15s,transform .15s}
+  .sd-shortcut:hover{box-shadow:0 6px 16px rgba(16,42,67,.1);transform:translateY(-2px)}
+  .sd-sc-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;
+              justify-content:center;font-size:20px}
+  .sd-sc-title{font-size:14px;font-weight:600;font-family:'Outfit',sans-serif;color:#16223a}
+  .sd-sc-sub{font-size:12px;color:#64748b;margin-top:4px}
+  .sd-sc-link{font-size:12px;font-weight:600;margin-top:auto}
+
+  /* ── TOP CONSOMMATEURS ── */
+  .sd-top{overflow:hidden}
+  .sd-top-head{display:flex;align-items:center;justify-content:space-between;
+               padding:16px 20px;border-bottom:1px solid #e3ecf3}
+  .sd-top-all{font-size:12px;font-weight:600;color:#0984e3;text-decoration:none}
+  .sd-top-row{display:flex;align-items:center;gap:14px;padding:14px 20px}
+  .sd-top-row + .sd-top-row{border-top:1px solid #e3ecf3}
+  .sd-rank{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+           font-size:12px;font-weight:800;color:#fff;background:linear-gradient(135deg,#0984e3,#00b894);flex-shrink:0}
+  .sd-top-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;
+               justify-content:center;font-size:16px;background:#e8eef4;flex-shrink:0}
+  .sd-top-main{flex:1;min-width:0}
+  .sd-top-line{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:10px}
+  .sd-top-name{font-size:14px;font-weight:500;color:#16223a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sd-top-kwh{font-size:13px;font-weight:600;color:#0984e3;font-family:'DM Mono',monospace;flex-shrink:0}
+  .sd-track{height:6px;border-radius:999px;background:#e8eef4;overflow:hidden}
+  .sd-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#0984e3,#00b894)}
+  .sd-top-fcfa{font-size:13px;font-weight:600;color:#00b894;font-family:'DM Mono',monospace;flex-shrink:0}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:1100px){
+    .sd-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .sd-shortcuts{grid-template-columns:1fr}
+  }
+  @media(max-width:640px){
+    .sd-kpis{grid-template-columns:1fr}
+    .sd-wrap{padding:16px}
+    .sd-hero{padding:26px 24px}
+  }
+</style>
+
+<div class="sd-wrap">
+
+  <!-- ═══ HERO ═══ -->
+  <div class="sd-hero">
+    <div class="sd-hello">Bonjour, {{ request.user.get_full_name|default:request.user.username }}</div>
+    <h1 class="sd-title">Votre tableau de bord</h1>
+    <p class="sd-sub">Surveillez votre consommation électrique en temps réel et optimisez
+       vos dépenses d'énergie avec Socadel.</p>
+    <div class="sd-hero-actions">
+      <a href="{% url 'appareil_list' %}" class="sd-btn sd-btn-green">Gérer les appareils</a>
+      <a href="{% url 'statistique' %}" class="sd-btn sd-btn-ghost">Voir les statistiques</a>
     </div>
   </div>
 
-  <!-- ═══ KPI CARDS ═══════════════════════════════════════════════════════ -->
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+  <!-- ═══ KPI CARDS ═══ -->
+  <div class="sd-kpis">
 
-    <!-- Conso du jour — accent dégradé -->
-    <div class="rounded-2xl p-5 flex flex-col gap-4"
-         style="background:linear-gradient(135deg,#0984e3,#00b894);color:#fff">
-      <div class="flex items-center justify-between">
-        <span class="text-2xl"></span>
-        <span class="text-xs font-medium px-2.5 py-1 rounded-full"
-              style="background:rgba(255,255,255,.2);color:#fff">Aujourd'hui</span>
+    <div class="sd-kpi sd-kpi-accent">
+      <div class="sd-kpi-top">
+        <span class="sd-kpi-icon">⚡</span>
+        <span class="sd-badge sd-badge-light">Aujourd'hui</span>
       </div>
       <div>
-        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif">
-          {{ total_kWh_jour|floatformat:1 }} <span class="text-base font-semibold">kWh</span>
-        </div>
-        <div class="text-sm mt-1" style="color:rgba(255,255,255,.8)">Consommation du jour</div>
+        <div class="sd-kpi-value sd-white">{{ total_kWh_jour|floatformat:1 }} <span class="sd-unit">kWh</span></div>
+        <div class="sd-kpi-label sd-label-light">Consommation du jour</div>
       </div>
     </div>
 
-    <!-- Conso mensuelle -->
-    <div class="card rounded-2xl p-5 flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <span class="text-2xl">📅</span>
-        <span class="text-xs font-medium px-2.5 py-1 rounded-full"
-              style="background:#e8eef4;color:#64748b">Ce mois</span>
+    <div class="sd-kpi">
+      <div class="sd-kpi-top">
+        <span class="sd-kpi-icon">📅</span>
+        <span class="sd-badge">Ce mois</span>
       </div>
       <div>
-        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#16223a">
-          {{ total_kWh_mois|floatformat:0 }} <span class="text-base font-semibold">kWh</span>
-        </div>
-        <div class="text-sm mt-1" style="color:#64748b">Conso. mensuelle estimée</div>
+        <div class="sd-kpi-value">{{ total_kWh_mois|floatformat:0 }} <span class="sd-unit">kWh</span></div>
+        <div class="sd-kpi-label">Conso. mensuelle estimée</div>
       </div>
     </div>
 
-    <!-- Facture estimée -->
-    <div class="card rounded-2xl p-5 flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <span class="text-2xl">💰</span>
-        <span class="text-xs font-medium px-2.5 py-1 rounded-full"
-              style="background:#e8eef4;color:#64748b">Estimation</span>
+    <div class="sd-kpi">
+      <div class="sd-kpi-top">
+        <span class="sd-kpi-icon">💰</span>
+        <span class="sd-badge">Estimation</span>
       </div>
       <div>
-        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#16223a">
-          {{ total_cout_mois|floatformat:0 }} <span class="text-base font-semibold">FCFA</span>
-        </div>
-        <div class="text-sm mt-1" style="color:#64748b">Facture mensuelle estimée</div>
+        <div class="sd-kpi-value">{{ total_cout_mois|floatformat:0 }} <span class="sd-unit">FCFA</span></div>
+        <div class="sd-kpi-label">Facture mensuelle estimée</div>
       </div>
     </div>
 
-    <!-- Appareils actifs -->
-    <div class="card rounded-2xl p-5 flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <span class="text-2xl">🔌</span>
-        <span class="text-xs font-medium px-2.5 py-1 rounded-full"
-              style="background:#e8eef4;color:#64748b">Connectés</span>
+    <div class="sd-kpi">
+      <div class="sd-kpi-top">
+        <span class="sd-kpi-icon">🔌</span>
+        <span class="sd-badge">Connectés</span>
       </div>
       <div>
-        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#16223a">
-          {{ nb_actifs }} <span class="text-base font-semibold">/ {{ nb_total }}</span>
-        </div>
-        <div class="text-sm mt-1" style="color:#64748b">Appareils actifs</div>
+        <div class="sd-kpi-value">{{ nb_actifs }} <span class="sd-unit">/ {{ nb_total }}</span></div>
+        <div class="sd-kpi-label">Appareils actifs</div>
       </div>
     </div>
 
   </div>
 
-  <!-- ═══ COURBE JOURNALIÈRE ══════════════════════════════════════════════ -->
-  <div class="card rounded-2xl p-5">
-    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+  <!-- ═══ COURBE JOURNALIÈRE ═══ -->
+  <div class="sd-card sd-chart">
+    <div class="sd-chart-head">
       <div>
-        <h2 class="font-bold text-base" style="font-family:'Outfit',sans-serif;color:#16223a">
-          Profil de consommation — aujourd'hui
-        </h2>
-        <p class="text-xs mt-0.5" style="color:#64748b">
-          Puissance appelée estimée sur 24h
-        </p>
+        <h2 class="sd-card-title">Profil de consommation — aujourd'hui</h2>
+        <p class="sd-card-sub">Puissance appelée estimée sur 24h</p>
       </div>
-      <span class="text-xs font-medium px-3 py-1 rounded-full"
-            style="background:#d9f3e5;color:#18a069">En direct</span>
+      <span class="sd-live">En direct</span>
     </div>
-
-    <!-- Hauteur fixe => même taille que la maquette -->
-    <div class="relative" style="height:280px">
+    <div class="sd-chart-body">
       <canvas id="chartJour"></canvas>
     </div>
   </div>
 
-  <!-- ═══ RACCOURCIS RAPIDES ══════════════════════════════════════════════ -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <!-- ═══ RACCOURCIS ═══ -->
+  <div class="sd-shortcuts">
 
-    <a href="{% url 'appareil_list' %}"
-       class="card rounded-2xl p-5 flex flex-col gap-3 text-left transition-all
-              hover:shadow-md hover:-translate-y-0.5"
-       style="text-decoration:none;color:inherit">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-           style="background:rgba(9,132,227,.1)">🔌</div>
+    <a href="{% url 'appareil_list' %}" class="sd-card sd-shortcut">
+      <div class="sd-sc-icon" style="background:rgba(9,132,227,.1)">🔌</div>
       <div>
-        <div class="font-semibold text-sm" style="font-family:'Outfit',sans-serif">Appareils</div>
-        <div class="text-xs mt-1" style="color:#64748b">Gérer vos équipements</div>
+        <div class="sd-sc-title">Appareils</div>
+        <div class="sd-sc-sub">Gérer vos équipements</div>
       </div>
-      <div class="text-xs font-medium mt-auto" style="color:#0984e3">Ouvrir →</div>
+      <div class="sd-sc-link" style="color:#0984e3">Ouvrir →</div>
     </a>
 
-    <a href="{% url 'consommation_globale' %}"
-       class="card rounded-2xl p-5 flex flex-col gap-3 text-left transition-all
-              hover:shadow-md hover:-translate-y-0.5"
-       style="text-decoration:none;color:inherit">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-           style="background:rgba(0,184,148,.1)">📊</div>
+    <a href="{% url 'consommation_globale' %}" class="sd-card sd-shortcut">
+      <div class="sd-sc-icon" style="background:rgba(0,184,148,.1)">📊</div>
       <div>
-        <div class="font-semibold text-sm" style="font-family:'Outfit',sans-serif">Consommation</div>
-        <div class="text-xs mt-1" style="color:#64748b">Suivi détaillé par période</div>
+        <div class="sd-sc-title">Consommation</div>
+        <div class="sd-sc-sub">Suivi détaillé par période</div>
       </div>
-      <div class="text-xs font-medium mt-auto" style="color:#00b894">Ouvrir →</div>
+      <div class="sd-sc-link" style="color:#00b894">Ouvrir →</div>
     </a>
 
-    <a href="{% url 'cout_global' %}"
-       class="card rounded-2xl p-5 flex flex-col gap-3 text-left transition-all
-              hover:shadow-md hover:-translate-y-0.5"
-       style="text-decoration:none;color:inherit">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-           style="background:rgba(9,132,227,.08)">🧾</div>
+    <a href="{% url 'cout_global' %}" class="sd-card sd-shortcut">
+      <div class="sd-sc-icon" style="background:rgba(9,132,227,.08)">🧾</div>
       <div>
-        <div class="font-semibold text-sm" style="font-family:'Outfit',sans-serif">Facturation</div>
-        <div class="text-xs mt-1" style="color:#64748b">Consulter vos factures</div>
+        <div class="sd-sc-title">Facturation</div>
+        <div class="sd-sc-sub">Consulter vos factures</div>
       </div>
-      <div class="text-xs font-medium mt-auto" style="color:#0984e3">Ouvrir →</div>
+      <div class="sd-sc-link" style="color:#0984e3">Ouvrir →</div>
     </a>
 
   </div>
 
-  <!-- ═══ TOP 3 CONSOMMATEURS ═════════════════════════════════════════════ -->
+  <!-- ═══ TOP CONSOMMATEURS ═══ -->
   {% if top_appareils %}
-  <div class="card rounded-2xl overflow-hidden">
-    <div class="px-5 py-4 flex items-center justify-between"
-         style="border-bottom:1px solid #ccdde9">
-      <h2 class="font-bold text-base" style="font-family:'Outfit',sans-serif">
-        Top consommateurs ce mois
-      </h2>
-      <a href="{% url 'consommation_globale' %}"
-         class="text-xs font-medium" style="color:#0984e3;text-decoration:none">
-        Voir tout →
-      </a>
+  <div class="sd-card sd-top">
+    <div class="sd-top-head">
+      <h2 class="sd-card-title">Top consommateurs ce mois</h2>
+      <a href="{% url 'consommation_globale' %}" class="sd-top-all">Voir tout →</a>
     </div>
-    <div>
-      {% for row in top_appareils %}
-      <div class="px-5 py-4 flex items-center gap-4"
-           style="{% if not forloop.first %}border-top:1px solid #ccdde9{% endif %}">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center
-                    text-xs font-black text-white shrink-0"
-             style="background:linear-gradient(135deg,#0984e3,#00b894)">
-          {{ forloop.counter }}
+    {% for row in top_appareils %}
+    <div class="sd-top-row">
+      <div class="sd-rank">{{ forloop.counter }}</div>
+      <div class="sd-top-icon">{{ row.appareil.icone }}</div>
+      <div class="sd-top-main">
+        <div class="sd-top-line">
+          <span class="sd-top-name">{{ row.appareil.nom }}</span>
+          <span class="sd-top-kwh">{{ row.kWh|floatformat:1 }} kWh</span>
         </div>
-        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
-             style="background:#e8eef4">
-          {{ row.appareil.icone }}
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="font-medium text-sm truncate">{{ row.appareil.nom }}</span>
-            <span class="text-sm font-semibold ml-3 shrink-0"
-                  style="font-family:'DM Mono',monospace;color:#0984e3">
-              {{ row.kWh|floatformat:1 }} kWh
-            </span>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill" style="width:{{ row.pct|floatformat:0 }}%"></div>
-          </div>
-        </div>
-        <div class="shrink-0 text-sm font-semibold"
-             style="font-family:'DM Mono',monospace;color:#00b894">
-          {{ row.fcfa|floatformat:0 }} FCFA
-        </div>
+        <div class="sd-track"><div class="sd-fill" style="width:{{ row.pct|floatformat:0 }}%"></div></div>
       </div>
-      {% endfor %}
+      <div class="sd-top-fcfa">{{ row.fcfa|floatformat:0 }} FCFA</div>
     </div>
+    {% endfor %}
   </div>
   {% endif %}
 
@@ -229,25 +229,22 @@
 
 {% block extra_scripts %}
 <script>
-  /* Courbe journalière — même forme que la maquette :
-     plat la nuit, montée franche vers 5h-6h, pic vers 11h,
-     décroissance l'après-midi, plateau le soir, chute à 23h.        */
   const totalKWhJour = parseFloat("{{ total_kWh_jour|floatformat:4 }}") || 0;
   const heures = Array.from({length: 24}, (_, h) => h + 'h');
 
+  /* Forme de courbe identique à la maquette */
   const profil = [
-    6, 6, 6, 6, 6, 6,            // 0h–5h  : nuit plate
-    20, 21, 23, 25, 27, 28,      // 6h–11h : montée + pic
-    27.5, 26, 24, 21.5, 19, 16.5,// 12h–17h : décroissance
-    14, 12, 11, 10.5, 10.5, 5    // 18h–23h : plateau soir + chute
+    6, 6, 6, 6, 6, 6,
+    20, 21, 23, 25, 27, 28,
+    27.5, 26, 24, 21.5, 19, 16.5,
+    14, 12, 11, 10.5, 10.5, 5
   ];
 
-  /* Pic de la courbe = conso du jour (comme la maquette : 27.9 -> axe 0..28) */
   const pic  = Math.max(...profil);
   const data = profil.map(p => +((p / pic) * totalKWhJour).toFixed(2));
 
   const axeMax = Math.max(4, Math.ceil(totalKWhJour));
-  const pas    = Math.max(1, Math.round(axeMax / 4));   // 0, 7, 14, 21, 28
+  const pas    = Math.max(1, Math.round(axeMax / 4));
 
   new Chart(document.getElementById('chartJour'), {
     type: 'line',
@@ -262,7 +259,7 @@
         pointHoverRadius: 5,
         tension: .45,
         fill: true,
-        backgroundColor: (ctx) => {           // dégradé bleu clair vers le bas
+        backgroundColor: (ctx) => {
           const area = ctx.chart.chartArea;
           if (!area) return 'rgba(47,128,237,.12)';
           const g = ctx.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
@@ -274,29 +271,26 @@
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,             // => respecte la hauteur du div (280px)
+      maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#0f2447',
-          padding: 10,
-          displayColors: false,
+          backgroundColor: '#0f2447', padding: 10, displayColors: false,
           callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + ' kW' }
         }
       },
       scales: {
         x: {
-          grid: { color: 'rgba(148,163,184,.15)', borderDash: [4, 4] }, // v3
-          border: { dash: [4, 4], color: '#cbd5e1' },                   // v4
+          grid: { color: 'rgba(148,163,184,.15)', borderDash: [4, 4] },
+          border: { dash: [4, 4], color: '#cbd5e1' },
           ticks: {
             color: '#94a3b8', font: { size: 10 },
             autoSkip: false, maxRotation: 0,
-            callback: (v, i) => (i % 4 === 0 ? i + 'h' : '')   // 0h,4h,8h…
+            callback: (v, i) => (i % 4 === 0 ? i + 'h' : '')
           }
         },
         y: {
-          min: 0,
-          max: axeMax,
+          min: 0, max: axeMax,
           grid: { color: 'rgba(148,163,184,.15)', borderDash: [4, 4] },
           border: { display: false, dash: [4, 4] },
           ticks: { stepSize: pas, color: '#94a3b8', font: { size: 10 } }
