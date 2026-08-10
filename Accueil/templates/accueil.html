@@ -4,7 +4,7 @@
 
 {% block content %}
 {% comment %}
-  Context attendu depuis AccueilView :
+  Contexte attendu depuis AccueilView :
     nb_actifs         — int
     nb_total          — int
     total_kWh_jour    — float
@@ -14,127 +14,125 @@
 
 <div class="flex flex-col gap-6">
 
-  <!-- ═══ HERO ══════════════════════════════════════════════════════════════ -->
-  <div class="rounded-3xl p-8 relative overflow-hidden"
-       style="background:linear-gradient(135deg,#0a1628 0%,#0984e3 60%,#00b894 100%);min-height:190px">
-
-    <!-- Grille de points décorative -->
-    <div class="absolute inset-0 opacity-10"
-         style="background-image:radial-gradient(circle,rgba(255,255,255,.35) 1px,transparent 1px);
-                background-size:24px 24px"></div>
-
+  <!-- ═══ HERO ═══════════════════════════════════════════════════════════ -->
+  <div class="rounded-3xl px-8 py-9 relative overflow-hidden"
+       style="background:linear-gradient(115deg,#0a1628 0%,#0984e3 55%,#00b894 100%);min-height:210px">
     <div class="relative z-10">
-      <div class="text-xs font-medium mb-1"
+      <div class="text-xs font-medium mb-2"
            style="color:rgba(255,255,255,.6);font-family:'DM Mono',monospace">
-        Bonjour — Tableau de bord
+        Bonjour, {{ request.user.get_full_name|default:request.user.username }}
       </div>
-      <h1 class="text-3xl font-black text-white mb-2"
+      <h1 class="text-3xl md:text-4xl font-black text-white mb-3"
           style="font-family:'Outfit',sans-serif">
-        Votre compteur Socadel
+        Votre tableau de bord
       </h1>
-      <p class="text-sm mb-6 max-w-md" style="color:rgba(255,255,255,.7)">
-        Surveillez votre consommation électrique en temps réel et
-        maîtrisez vos dépenses d'énergie au quotidien.
+      <p class="text-sm mb-7 max-w-lg" style="color:rgba(255,255,255,.75)">
+        Surveillez votre consommation électrique en temps réel et optimisez
+        vos dépenses d'énergie avec Socadel.
       </p>
       <div class="flex flex-wrap gap-3">
         <a href="{% url 'appareil_list' %}"
            class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
            style="background:#00b894;color:#fff;text-decoration:none">
-          🔌 Gérer les appareils
+          Gérer les appareils
         </a>
         <a href="{% url 'statistique' %}"
-           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-           style="background:rgba(255,255,255,.15);color:#fff;text-decoration:none;
-                  backdrop-filter:blur(4px)">
-          📈 Voir les statistiques
+           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+           style="background:rgba(255,255,255,.15);color:#fff;text-decoration:none;backdrop-filter:blur(4px)">
+          Voir les statistiques
         </a>
       </div>
     </div>
   </div>
 
-  <!-- ═══ KPI CARDS ═════════════════════════════════════════════════════════ -->
+  <!-- ═══ KPI CARDS ═══════════════════════════════════════════════════════ -->
   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
 
-    <!-- Conso du jour — accent -->
-    <div class="rounded-2xl p-5 flex flex-col gap-3"
+    <!-- Conso du jour — accent dégradé -->
+    <div class="rounded-2xl p-5 flex flex-col gap-4"
          style="background:linear-gradient(135deg,#0984e3,#00b894);color:#fff">
       <div class="flex items-center justify-between">
-        <span class="text-2xl">⚡</span>
+        <span class="text-2xl"></span>
         <span class="text-xs font-medium px-2.5 py-1 rounded-full"
-              style="background:rgba(255,255,255,.2)">Aujourd'hui</span>
+              style="background:rgba(255,255,255,.2);color:#fff">Aujourd'hui</span>
       </div>
       <div>
         <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif">
           {{ total_kWh_jour|floatformat:1 }} <span class="text-base font-semibold">kWh</span>
         </div>
-        <div class="text-sm mt-0.5" style="opacity:.8">Consommation du jour</div>
+        <div class="text-sm mt-1" style="color:rgba(255,255,255,.8)">Consommation du jour</div>
       </div>
     </div>
 
     <!-- Conso mensuelle -->
-    <div class="card rounded-2xl p-5 flex flex-col gap-3">
+    <div class="card rounded-2xl p-5 flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <span class="text-2xl">📅</span>
         <span class="text-xs font-medium px-2.5 py-1 rounded-full"
-              style="background:#e2ecf4;color:#5a7080">Ce mois</span>
+              style="background:#e8eef4;color:#64748b">Ce mois</span>
       </div>
       <div>
-        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#0984e3">
+        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#16223a">
           {{ total_kWh_mois|floatformat:0 }} <span class="text-base font-semibold">kWh</span>
         </div>
-        <div class="text-sm mt-0.5" style="color:#5a7080">Consommation mensuelle</div>
+        <div class="text-sm mt-1" style="color:#64748b">Conso. mensuelle estimée</div>
       </div>
     </div>
 
     <!-- Facture estimée -->
-    <div class="card rounded-2xl p-5 flex flex-col gap-3">
+    <div class="card rounded-2xl p-5 flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <span class="text-2xl">💰</span>
         <span class="text-xs font-medium px-2.5 py-1 rounded-full"
-              style="background:#e2ecf4;color:#5a7080">Estimation</span>
+              style="background:#e8eef4;color:#64748b">Estimation</span>
       </div>
       <div>
-        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#00b894">
+        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#16223a">
           {{ total_cout_mois|floatformat:0 }} <span class="text-base font-semibold">FCFA</span>
         </div>
-        <div class="text-sm mt-0.5" style="color:#5a7080">Facture mensuelle estimée</div>
+        <div class="text-sm mt-1" style="color:#64748b">Facture mensuelle estimée</div>
       </div>
     </div>
 
     <!-- Appareils actifs -->
-    <div class="card rounded-2xl p-5 flex flex-col gap-3">
+    <div class="card rounded-2xl p-5 flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <span class="text-2xl">🔌</span>
         <span class="text-xs font-medium px-2.5 py-1 rounded-full"
-              style="background:#e2ecf4;color:#5a7080">Connectés</span>
+              style="background:#e8eef4;color:#64748b">Connectés</span>
       </div>
       <div>
-        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#0984e3">
-          {{ nb_actifs }} <span class="text-base font-normal" style="color:#5a7080">/ {{ nb_total }}</span>
+        <div class="text-2xl font-black" style="font-family:'Outfit',sans-serif;color:#16223a">
+          {{ nb_actifs }} <span class="text-base font-semibold">/ {{ nb_total }}</span>
         </div>
-        <div class="text-sm mt-0.5" style="color:#5a7080">Appareils actifs</div>
+        <div class="text-sm mt-1" style="color:#64748b">Appareils actifs</div>
       </div>
     </div>
 
   </div>
 
-  <!-- ═══ COURBE JOURNALIÈRE ════════════════════════════════════════════════ -->
+  <!-- ═══ COURBE JOURNALIÈRE ══════════════════════════════════════════════ -->
   <div class="card rounded-2xl p-5">
     <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
       <div>
-        <h2 class="font-bold text-base" style="font-family:'Outfit',sans-serif">
+        <h2 class="font-bold text-base" style="font-family:'Outfit',sans-serif;color:#16223a">
           Profil de consommation — aujourd'hui
         </h2>
-        <p class="text-xs mt-0.5" style="color:#5a7080">
-          Puissance appelée estimée sur 24 heures
+        <p class="text-xs mt-0.5" style="color:#64748b">
+          Puissance appelée estimée sur 24h
         </p>
       </div>
-      <span class="badge-active text-xs">● En direct</span>
+      <span class="text-xs font-medium px-3 py-1 rounded-full"
+            style="background:#d9f3e5;color:#18a069">En direct</span>
     </div>
-    <canvas id="chartJour" height="65"></canvas>
+
+    <!-- Hauteur fixe => même taille que la maquette -->
+    <div class="relative" style="height:280px">
+      <canvas id="chartJour"></canvas>
+    </div>
   </div>
 
-  <!-- ═══ RACCOURCIS RAPIDES ════════════════════════════════════════════════ -->
+  <!-- ═══ RACCOURCIS RAPIDES ══════════════════════════════════════════════ -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
     <a href="{% url 'appareil_list' %}"
@@ -145,7 +143,7 @@
            style="background:rgba(9,132,227,.1)">🔌</div>
       <div>
         <div class="font-semibold text-sm" style="font-family:'Outfit',sans-serif">Appareils</div>
-        <div class="text-xs mt-1" style="color:#5a7080">Gérer vos équipements</div>
+        <div class="text-xs mt-1" style="color:#64748b">Gérer vos équipements</div>
       </div>
       <div class="text-xs font-medium mt-auto" style="color:#0984e3">Ouvrir →</div>
     </a>
@@ -158,7 +156,7 @@
            style="background:rgba(0,184,148,.1)">📊</div>
       <div>
         <div class="font-semibold text-sm" style="font-family:'Outfit',sans-serif">Consommation</div>
-        <div class="text-xs mt-1" style="color:#5a7080">Suivi détaillé par période</div>
+        <div class="text-xs mt-1" style="color:#64748b">Suivi détaillé par période</div>
       </div>
       <div class="text-xs font-medium mt-auto" style="color:#00b894">Ouvrir →</div>
     </a>
@@ -171,14 +169,14 @@
            style="background:rgba(9,132,227,.08)">🧾</div>
       <div>
         <div class="font-semibold text-sm" style="font-family:'Outfit',sans-serif">Facturation</div>
-        <div class="text-xs mt-1" style="color:#5a7080">Consulter vos factures</div>
+        <div class="text-xs mt-1" style="color:#64748b">Consulter vos factures</div>
       </div>
       <div class="text-xs font-medium mt-auto" style="color:#0984e3">Ouvrir →</div>
     </a>
 
   </div>
 
-  <!-- ═══ TOP 3 CONSOMMATEURS ═══════════════════════════════════════════════ -->
+  <!-- ═══ TOP 3 CONSOMMATEURS ═════════════════════════════════════════════ -->
   {% if top_appareils %}
   <div class="card rounded-2xl overflow-hidden">
     <div class="px-5 py-4 flex items-center justify-between"
@@ -195,21 +193,15 @@
       {% for row in top_appareils %}
       <div class="px-5 py-4 flex items-center gap-4"
            style="{% if not forloop.first %}border-top:1px solid #ccdde9{% endif %}">
-
-        <!-- Rang -->
         <div class="w-7 h-7 rounded-full flex items-center justify-center
                     text-xs font-black text-white shrink-0"
              style="background:linear-gradient(135deg,#0984e3,#00b894)">
           {{ forloop.counter }}
         </div>
-
-        <!-- Icône -->
         <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
-             style="background:#e2ecf4">
+             style="background:#e8eef4">
           {{ row.appareil.icone }}
         </div>
-
-        <!-- Nom + barre -->
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between mb-1.5">
             <span class="font-medium text-sm truncate">{{ row.appareil.nom }}</span>
@@ -222,8 +214,6 @@
             <div class="progress-fill" style="width:{{ row.pct|floatformat:0 }}%"></div>
           </div>
         </div>
-
-        <!-- Coût -->
         <div class="shrink-0 text-sm font-semibold"
              style="font-family:'DM Mono',monospace;color:#00b894">
           {{ row.fcfa|floatformat:0 }} FCFA
@@ -237,24 +227,27 @@
 </div>
 {% endblock %}
 
-
 {% block extra_scripts %}
 <script>
-  /* Courbe journalière : on simule une forme de courbe typique de consommation
-     domestique (faible la nuit, pic matin et soir).
-     En prod, remplace chart_data par une vraie série depuis la vue Django.      */
+  /* Courbe journalière — même forme que la maquette :
+     plat la nuit, montée franche vers 5h-6h, pic vers 11h,
+     décroissance l'après-midi, plateau le soir, chute à 23h.        */
   const totalKWhJour = parseFloat("{{ total_kWh_jour|floatformat:4 }}") || 0;
   const heures = Array.from({length: 24}, (_, h) => h + 'h');
 
-  // Profil de charge normalisé (somme ≈ 1 sur 24h)
   const profil = [
-    .02,.02,.02,.02,.02,.02,        // 0h–5h : nuit
-    .035,.05,.055,.05,.04,.04,      // 6h–11h : matin
-    .045,.045,.04,.04,.04,.05,      // 12h–17h : après-midi
-    .055,.07,.065,.06,.04,.025      // 18h–23h : soir
+    6, 6, 6, 6, 6, 6,            // 0h–5h  : nuit plate
+    20, 21, 23, 25, 27, 28,      // 6h–11h : montée + pic
+    27.5, 26, 24, 21.5, 19, 16.5,// 12h–17h : décroissance
+    14, 12, 11, 10.5, 10.5, 5    // 18h–23h : plateau soir + chute
   ];
 
-  const data = profil.map(p => parseFloat((totalKWhJour * p * 24).toFixed(3)));
+  /* Pic de la courbe = conso du jour (comme la maquette : 27.9 -> axe 0..28) */
+  const pic  = Math.max(...profil);
+  const data = profil.map(p => +((p / pic) * totalKWhJour).toFixed(2));
+
+  const axeMax = Math.max(4, Math.ceil(totalKWhJour));
+  const pas    = Math.max(1, Math.round(axeMax / 4));   // 0, 7, 14, 21, 28
 
   new Chart(document.getElementById('chartJour'), {
     type: 'line',
@@ -263,33 +256,50 @@
       datasets: [{
         label: 'kW',
         data,
-        borderColor: '#0984e3',
-        backgroundColor: 'rgba(9,132,227,.1)',
+        borderColor: '#2f80ed',
         borderWidth: 2.5,
         pointRadius: 0,
         pointHoverRadius: 5,
         tension: .45,
         fill: true,
+        backgroundColor: (ctx) => {           // dégradé bleu clair vers le bas
+          const area = ctx.chart.chartArea;
+          if (!area) return 'rgba(47,128,237,.12)';
+          const g = ctx.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+          g.addColorStop(0, 'rgba(47,128,237,.22)');
+          g.addColorStop(1, 'rgba(47,128,237,.02)');
+          return g;
+        }
       }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,             // => respecte la hauteur du div (280px)
       plugins: {
         legend: { display: false },
         tooltip: {
-          callbacks: {
-            label: ctx => ctx.parsed.y.toFixed(3) + ' kW'
-          }
+          backgroundColor: '#0f2447',
+          padding: 10,
+          displayColors: false,
+          callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + ' kW' }
         }
       },
       scales: {
         x: {
-          grid: { color: '#f0f4f8' },
-          ticks: { font: { size: 10 }, color: '#94a3b8', maxTicksLimit: 12 }
+          grid: { color: 'rgba(148,163,184,.15)', borderDash: [4, 4] }, // v3
+          border: { dash: [4, 4], color: '#cbd5e1' },                   // v4
+          ticks: {
+            color: '#94a3b8', font: { size: 10 },
+            autoSkip: false, maxRotation: 0,
+            callback: (v, i) => (i % 4 === 0 ? i + 'h' : '')   // 0h,4h,8h…
+          }
         },
         y: {
-          grid: { color: '#f0f4f8' },
-          ticks: { font: { size: 10 }, color: '#94a3b8' }
+          min: 0,
+          max: axeMax,
+          grid: { color: 'rgba(148,163,184,.15)', borderDash: [4, 4] },
+          border: { display: false, dash: [4, 4] },
+          ticks: { stepSize: pas, color: '#94a3b8', font: { size: 10 } }
         }
       }
     }
