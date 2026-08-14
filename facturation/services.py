@@ -43,26 +43,7 @@ def calculer_cout_energie(kwh, type_usage="residentiel", date_reference=None):
     return round(cout, 2)
 
 def calculer_couts_marginaux_foyer(appareils_qs, date_debut, date_fin, type_usage="residentiel"):
-    """
-    Répartit le coût total du foyer entre les appareils, en respectant
-    l'ordre des tranches tarifaires (contrairement à calculer_cout_appareil
-    qui traite chaque appareil isolément et lui applique tout le barème
-    depuis le début).
-
-    Les appareils sont classés par consommation décroissante : les plus
-    gros consommateurs "remplissent" les tranches chères en premier,
-    ce qui reflète mieux une vraie répartition de facture. La somme des
-    coûts renvoyés est garantie égale au coût total du foyer (énergie
-    seule, sans abonnement).
-
-    Renvoie un dict {appareil_id: {'kwh':..., 'cout':...}}.
-    """
     conso_par_appareil = get_consommation_par_appareil(appareils_qs, date_debut, date_fin)
-
-    # Classement par consommation décroissante (les gros consommateurs
-    # "remplissent" les tranches chères en dernier, donc paient le tarif
-    # marginal le plus élevé — cohérent avec l'intuition "qui consomme le
-    # plus paie le tarif le plus cher sur sa part excédentaire").
     items = sorted(conso_par_appareil.items(), key=lambda x: (x[1] or 0))
 
     resultat = {}
@@ -70,18 +51,12 @@ def calculer_couts_marginaux_foyer(appareils_qs, date_debut, date_fin, type_usag
     for appareil_id, kwh in items:
         kwh = kwh or 0
         cumul_apres = cumul_avant + kwh
-
-        cout_avant = calculer_cout_energie(cumul_avant, type_usage, date_fin)
-        cout_apres = calculer_cout_energie(cumul_apres, type_usage, date_fin)
-
-        resultat[appareil_id] = {
-            'kwh': round(kwh, 3),
-            'cout': round(cout_apres - cout_avant, 2),
-        }
+        cout_avant = calculer_cout_energie(cumul_avant, type_usage)
+        cout_apres = calculer_cout_energie(cumul_apres, type_usage)
+        resultat[appareil_id] = {'kwh': round(kwh, 3), 'cout': round(cout_apres - cout_avant, 2)}
         cumul_avant = cumul_apres
 
     return resultat
-
 
 def get_prix_kwh(date_reference=None, kwh_reference=1):
     """
@@ -132,3 +107,46 @@ def get_historique_global(nb_mois=6, type_usage="residentiel"):
             annee -= 1
 
     return list(reversed(resultat))
+
+def liste_annees():
+    annees = (
+        Consommation.objects.dates("date", "year")
+        .values_list("date__year", flat=True)
+    )
+    annees = sorted(set(annees), reverse=True)
+    if not annees:
+        from django.utils import timezone
+        annees = [timezone.now().year]
+    return annees
+
+
+def get_historique_annuel(annee, type_usage="residentiel"):
+    """
+    Historique mois par mois pour une année donnée : liste de dicts
+    {'mois': 'Jan 2025', 'kWh': ..., 'fcfa': ...} (coût énergie seul, sans abonnement).
+    """
+    import calendar
+    from datetime import date
+
+    MOIS_ABREV = ['', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+                  'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+
+    resultat = []
+    for mois in range(1, 13):
+        debut = date(annee, mois, 1)
+        dernier_jour = calendar.monthrange(annee, mois)[1]
+        fin = date(annee, mois, dernier_jour)
+
+        total_kwh = Consommation.objects.filter(
+            date__gte=debut, date__lte=fin
+        ).aggregate(t=Sum('energie_consommee'))['t'] or 0
+        total_kwh = round(total_kwh, 2)
+
+        if total_kwh > 0:
+            resultat.append({
+                'mois': f"{MOIS_ABREV[mois]} {annee}",
+                'kWh': total_kwh,
+                'fcfa': round(calculer_cout_energie(total_kwh, type_usage)),
+            })
+
+    return resultat

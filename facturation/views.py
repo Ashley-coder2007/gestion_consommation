@@ -18,10 +18,13 @@ class CoutGlobalView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         mode = self.request.GET.get("mode", "mois")
+        type_usage = self.request.GET.get("type_usage", "residentiel")
         start_date, end_date, jours = conso_services.bornes_periode(self.request, mode)
 
         appareils_qs = Appareil.objects.all()
-        couts_marginaux = services.calculer_couts_marginaux_foyer(appareils_qs, start_date, end_date)
+        couts_marginaux = services.calculer_couts_marginaux_foyer(
+            appareils_qs, start_date, end_date, type_usage
+        )
 
         rows = []
         total_kWh = 0
@@ -31,22 +34,39 @@ class CoutGlobalView(TemplateView):
                 "appareil": appareil_vers_dict(a),
                 "conso_kWh": detail['kwh'],
                 "cout_fcfa": detail['cout'],
+                "pct": (detail['kwh'] / total_kWh * 100) if total_kWh else 0,
             })
             total_kWh += detail['kwh']
 
-        total_energie = services.calculer_cout_energie(total_kWh)
-        total_facture = total_energie + services.ABONNEMENT
+        for row in rows:
+            row["pct"] = (row["conso_kWh"] / total_kWh * 100) if total_kWh else 0
+
+        total_energie = services.calculer_cout_energie(total_kWh, type_usage)
+
+        annee_selectionnee = int(self.request.GET.get("annee", services.liste_annees()[0]))
+        historique = services.get_historique_annuel(annee_selectionnee, type_usage)
 
         context.update({
             "appareils": rows,
             "total_energie": total_energie,
-            "abonnement": services.ABONNEMENT,
-            "total_facture": total_facture,
+            "total_facture": total_energie,  # pas d'abonnement inclus
             "total_kWh": total_kWh,
-            # ... reste inchangé
+            "jours": jours,
+            "mode": mode,
+            "type_usage": type_usage,
+            "date_debut": self.request.GET.get("date_debut", ""),
+            "date_fin": self.request.GET.get("date_fin", ""),
+            "label_periode": dict(PERIODES).get(mode, ""),
+            "periodes": PERIODES,
+            "tarif": services.get_prix_kwh(),
+            "historique": historique,
+            "annees": services.liste_annees(),
+            "annee_selectionnee": annee_selectionnee,
+            "chart_labels": json.dumps([h["mois"] for h in historique]),
+            "chart_data": json.dumps([h["fcfa"] for h in historique]),
+            "active_nav": "facturation",
         })
         return context
-
 
 class CoutAppareilView(TemplateView):
     template_name = "facturation/cout_appareil.html"
