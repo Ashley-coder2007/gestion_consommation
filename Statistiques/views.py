@@ -1,5 +1,7 @@
 from datetime import date
 from django.views.generic import TemplateView
+from django.http import JsonResponse
+from .nilm_services.rejeu_service import lancer_rejeu_arriere_plan
 
 from . import services
 from facturation.services import get_prix_kwh
@@ -46,3 +48,10 @@ class StatistiqueView(TemplateView):
             "active_nav": "statistiques",
         })
         return context
+
+
+
+    def lancer_nilm_demo(request):
+    vitesse = float(request.GET.get("vitesse", 0.1))
+    lancer_rejeu_arriere_plan(vitesse=vitesse)
+    return JsonResponse({"status": "démarré", "vitesse": vitesse})

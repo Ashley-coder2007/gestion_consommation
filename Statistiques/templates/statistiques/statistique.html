@@ -377,6 +377,9 @@
         <p style="font-size: 12px; color: #5a7080; margin: 2px 0 0 0;">Historique récent</p>
       </div>
       <div style="position: relative; width: 100%; height: 260px;">
+        <button id="btn-lancer-nilm" style="background:#0984e3;color:white;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;margin-bottom:10px;">
+          ▶ Lancer la démo NILM
+        </button>
         <canvas id="chartEvol"></canvas>
       </div>
     </div>
@@ -610,6 +613,11 @@
   socket.onclose = function () {
     console.warn("WebSocket temps réel déconnecté");
   };
+
+  document.getElementById('btn-lancer-nilm').addEventListener('click', async () => {
+    await fetch('/statistiques/lancer-nilm/?vitesse=0.1');
+    console.log("Rejeu NILM lancé en arrière-plan");
+  });
 
   // Ajoute une ligne dans la liste d'événements NILM
   function afficherEvenementNilm(nilm, heure) {
