@@ -8,6 +8,7 @@ urlpatterns = [
     path("appareils/<int:pk>/modifier/", views.AppareilModifierView.as_view(), name="appareil_modifier"),
     path("appareils/<int:pk>/supprimer/", views.appareil_supprimer, name="appareil_supprimer"),
     path("appareils/<int:pk>/toggle/", views.appareil_toggle, name="appareil_toggle"),
+
     path("api/appareils/", AppareilListCreateAPIView.as_view(), name="api_appareil_list"),
     path("api/appareils/<int:pk>/", AppareilDetailAPIView.as_view(), name="api_appareil_detail"),
 ]

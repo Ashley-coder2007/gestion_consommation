@@ -1,23 +1,40 @@
 from django import forms
 
 
-class AppareilForm(forms.Form):
-    """
-    Formulaire temporaire (pas encore un ModelForm) le temps que le vrai
-    model Appareil de ton ami soit branché. Une fois le model prêt,
-    remplace `forms.Form` par `forms.ModelForm` avec `class Meta: model = Appareil`.
-    """
-    CATEGORIES = [
-        ("Climatisation", "Climatisation"),
-        ("Électroménager", "Électroménager"),
-        ("Éclairage", "Éclairage"),
-        ("Audiovisuel", "Audiovisuel"),
-        ("Informatique", "Informatique"),
-        ("Autre", "Autre"),
-    ]
+CATEGORIES = [
+    ("", "Choisir une catégorie..."),
+    ("Cuisine", "Cuisine"),
+    ("Climatisation", "Climatisation"),
+    ("Eclairage", "Éclairage"),
+    ("Audiovisuel", "Audiovisuel"),
+    ("Electromenager", "Électroménager"),
+    ("Informatique", "Informatique"),
+    ("Autre", "Autre"),
+]
 
-    nom = forms.CharField(max_length=100)
-    categorie = forms.ChoiceField(choices=CATEGORIES)
-    puissance = forms.IntegerField(min_value=1)
-    heures_par_jour = forms.DateTimeField()
-    icone = forms.CharField(max_length=4, required=False)
+
+class AppareilForm(forms.Form):
+    nom = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={"placeholder": "Ex : Climatiseur Salon"}),
+    )
+
+    categorie = forms.ChoiceField(
+        choices=CATEGORIES,
+        required=True,
+    )
+
+    puissance = forms.FloatField(
+        min_value=0,
+        required=True,
+        widget=forms.NumberInput(attrs={"placeholder": "1500"}),
+    )
+
+    heures_par_jour = forms.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        min_value=0,
+        required=True,
+        widget=forms.NumberInput(attrs={"placeholder": "8", "step": "0.01"}),
+    )

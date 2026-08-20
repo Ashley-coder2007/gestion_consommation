@@ -26,7 +26,13 @@
           background:#fff;border:1px solid #e3ecf3;box-shadow:0 1px 3px rgba(16,42,67,.05)}
   .sd-kpi-accent{background:linear-gradient(135deg,#0984e3,#00b894);border:none;color:#fff}
   .sd-kpi-top{display:flex;align-items:center;justify-content:space-between}
-  .sd-kpi-icon{font-size:22px;line-height:1}
+  .sd-kpi-icon{font-size:22px;line-height:1;width:44px;height:44px;border-radius:12px;
+               display:flex;align-items:center;justify-content:center}
+  .sd-kpi-icon-blue{background:rgba(9,132,227,.1);color:#0984e3}
+  .sd-kpi-icon-green{background:rgba(0,184,148,.1);color:#00b894}
+  .sd-kpi-icon-orange{background:rgba(255,165,2,.12);color:#f39c12}
+  .sd-kpi-icon-purple{background:rgba(108,92,231,.1);color:#6c5ce7}
+  .sd-kpi-icon-white{background:rgba(255,255,255,.2);color:#fff}
   .sd-badge{font-size:11px;font-weight:600;padding:5px 12px;border-radius:999px;
             background:#e8eef4;color:#64748b;white-space:nowrap}
   .sd-badge-light{background:rgba(255,255,255,.2);color:#fff}
@@ -55,7 +61,7 @@
                color:inherit;transition:box-shadow .15s,transform .15s}
   .sd-shortcut:hover{box-shadow:0 6px 16px rgba(16,42,67,.1);transform:translateY(-2px)}
   .sd-sc-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;
-              justify-content:center;font-size:20px}
+              justify-content:center;font-size:18px}
   .sd-sc-title{font-size:14px;font-weight:600;font-family:'Outfit',sans-serif;color:#16223a}
   .sd-sc-sub{font-size:12px;color:#64748b;margin-top:4px}
   .sd-sc-link{font-size:12px;font-weight:600;margin-top:auto}
@@ -70,7 +76,7 @@
   .sd-rank{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
            font-size:12px;font-weight:800;color:#fff;background:linear-gradient(135deg,#0984e3,#00b894);flex-shrink:0}
   .sd-top-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;
-               justify-content:center;font-size:16px;background:#e8eef4;flex-shrink:0}
+               justify-content:center;font-size:16px;background:#e8eef4;color:#0984e3;flex-shrink:0}
   .sd-top-main{flex:1;min-width:0}
   .sd-top-line{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:10px}
   .sd-top-name{font-size:14px;font-weight:500;color:#16223a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -100,8 +106,12 @@
     <p class="sd-sub">Surveillez votre consommation électrique en temps réel et optimisez
        vos dépenses d'énergie avec Socadel.</p>
     <div class="sd-hero-actions">
-      <a href="{% url 'appareil_list' %}" class="sd-btn sd-btn-green">Gérer les appareils</a>
-      <a href="{% url 'statistique' %}" class="sd-btn sd-btn-ghost">Voir les statistiques</a>
+      <a href="{% url 'appareil_list' %}" class="sd-btn sd-btn-green">
+        <i class="fa-solid fa-plug"></i> Gérer les appareils
+      </a>
+      <a href="{% url 'statistique' %}" class="sd-btn sd-btn-ghost">
+        <i class="fa-solid fa-chart-line"></i> Voir les statistiques
+      </a>
     </div>
   </div>
 
@@ -110,7 +120,7 @@
 
     <div class="sd-kpi sd-kpi-accent">
       <div class="sd-kpi-top">
-        <span class="sd-kpi-icon">⚡</span>
+        <span class="sd-kpi-icon sd-kpi-icon-white"><i class="fa-solid fa-bolt"></i></span>
         <span class="sd-badge sd-badge-light">Aujourd'hui</span>
       </div>
       <div>
@@ -121,7 +131,7 @@
 
     <div class="sd-kpi">
       <div class="sd-kpi-top">
-        <span class="sd-kpi-icon">📅</span>
+        <span class="sd-kpi-icon sd-kpi-icon-blue"><i class="fa-solid fa-calendar-days"></i></span>
         <span class="sd-badge">Ce mois</span>
       </div>
       <div>
@@ -132,7 +142,7 @@
 
     <div class="sd-kpi">
       <div class="sd-kpi-top">
-        <span class="sd-kpi-icon">💰</span>
+        <span class="sd-kpi-icon sd-kpi-icon-green"><i class="fa-solid fa-money-bill-wave"></i></span>
         <span class="sd-badge">Estimation</span>
       </div>
       <div>
@@ -143,7 +153,7 @@
 
     <div class="sd-kpi">
       <div class="sd-kpi-top">
-        <span class="sd-kpi-icon">🔌</span>
+        <span class="sd-kpi-icon sd-kpi-icon-purple"><i class="fa-solid fa-plug-circle-check"></i></span>
         <span class="sd-badge">Connectés</span>
       </div>
       <div>
@@ -161,7 +171,7 @@
         <h2 class="sd-card-title">Profil de consommation — aujourd'hui</h2>
         <p class="sd-card-sub">Puissance appelée estimée sur 24h</p>
       </div>
-      <span class="sd-live">En direct</span>
+      <span class="sd-live"><i class="fa-solid fa-circle" style="font-size:6px;vertical-align:middle;margin-right:4px"></i> En direct</span>
     </div>
     <div class="sd-chart-body">
       <canvas id="chartJour"></canvas>
@@ -172,30 +182,36 @@
   <div class="sd-shortcuts">
 
     <a href="{% url 'appareil_list' %}" class="sd-card sd-shortcut">
-      <div class="sd-sc-icon" style="background:rgba(9,132,227,.1)">🔌</div>
+      <div class="sd-sc-icon" style="background:rgba(9,132,227,.1);color:#0984e3">
+        <i class="fa-solid fa-plug"></i>
+      </div>
       <div>
         <div class="sd-sc-title">Appareils</div>
         <div class="sd-sc-sub">Gérer vos équipements</div>
       </div>
-      <div class="sd-sc-link" style="color:#0984e3">Ouvrir →</div>
+      <div class="sd-sc-link" style="color:#0984e3">Ouvrir <i class="fa-solid fa-arrow-right"></i></div>
     </a>
 
     <a href="{% url 'consommation_globale' %}" class="sd-card sd-shortcut">
-      <div class="sd-sc-icon" style="background:rgba(0,184,148,.1)">📊</div>
+      <div class="sd-sc-icon" style="background:rgba(0,184,148,.1);color:#00b894">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
       <div>
         <div class="sd-sc-title">Consommation</div>
         <div class="sd-sc-sub">Suivi détaillé par période</div>
       </div>
-      <div class="sd-sc-link" style="color:#00b894">Ouvrir →</div>
+      <div class="sd-sc-link" style="color:#00b894">Ouvrir <i class="fa-solid fa-arrow-right"></i></div>
     </a>
 
     <a href="{% url 'cout_global' %}" class="sd-card sd-shortcut">
-      <div class="sd-sc-icon" style="background:rgba(9,132,227,.08)">🧾</div>
+      <div class="sd-sc-icon" style="background:rgba(9,132,227,.08);color:#0984e3">
+        <i class="fa-solid fa-file-invoice-dollar"></i>
+      </div>
       <div>
         <div class="sd-sc-title">Facturation</div>
         <div class="sd-sc-sub">Consulter vos factures</div>
       </div>
-      <div class="sd-sc-link" style="color:#0984e3">Ouvrir →</div>
+      <div class="sd-sc-link" style="color:#0984e3">Ouvrir <i class="fa-solid fa-arrow-right"></i></div>
     </a>
 
   </div>
@@ -205,12 +221,12 @@
   <div class="sd-card sd-top">
     <div class="sd-top-head">
       <h2 class="sd-card-title">Top consommateurs ce mois</h2>
-      <a href="{% url 'consommation_globale' %}" class="sd-top-all">Voir tout →</a>
+      <a href="{% url 'consommation_globale' %}" class="sd-top-all">Voir tout <i class="fa-solid fa-arrow-right"></i></a>
     </div>
     {% for row in top_appareils %}
     <div class="sd-top-row">
       <div class="sd-rank">{{ forloop.counter }}</div>
-      <div class="sd-top-icon">{{ row.appareil.icone }}</div>
+      <div class="sd-top-icon"><i class="{{ row.appareil.icone }}"></i></div>
       <div class="sd-top-main">
         <div class="sd-top-line">
           <span class="sd-top-name">{{ row.appareil.nom }}</span>

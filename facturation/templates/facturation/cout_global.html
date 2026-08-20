@@ -5,7 +5,7 @@
 <style>
   .grid-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
   @media (max-width: 1024px) {
@@ -29,7 +29,7 @@
 
     <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
       {% for p_id, p_label in periodes %}
-      <a href="?mode={{ p_id }}"
+      <a href="?mode={{ p_id }}{% if type_usage %}&type_usage={{ type_usage }}{% endif %}"
          style="padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; text-decoration: none; transition: all 0.2s;
                 background: {% if mode == p_id %}#00b894{% else %}#e2ecf4{% endif %};
                 color: {% if mode == p_id %}#ffffff{% else %}#5a7080{% endif %};">
@@ -38,18 +38,25 @@
       {% endfor %}
     </div>
 
-    <!-- Sélecteur de Régime Tarifaire -->
-    <div style="display: flex; align-items: center; gap: 8px;">
+    <!-- Sélecteur de Régime Tarifaire (soumission serveur) -->
+    <form method="get" style="display: flex; align-items: center; gap: 8px;">
+      <input type="hidden" name="mode" value="{{ mode }}">
+      {% if mode == 'personnalise' %}
+        <input type="hidden" name="date_debut" value="{{ date_debut }}">
+        <input type="hidden" name="date_fin" value="{{ date_fin }}">
+      {% endif %}
       <label for="global_type_usage" style="font-size: 12px; font-weight: 600; color: #0a1628; margin: 0;">Type d'usage :</label>
-      <select id="global_type_usage" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ccdde9; font-size: 12px; background: #f8fafc; color: #0a1628; outline: none; font-weight: 600;">
-        <option value="residentiel" selected>Domestique / Résidentiel</option>
-        <option value="professionnel">Professionnel / Non résidentiel</option>
+      <select name="type_usage" id="global_type_usage" onchange="this.form.submit()"
+              style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ccdde9; font-size: 12px; background: #f8fafc; color: #0a1628; outline: none; font-weight: 600;">
+        <option value="residentiel" {% if type_usage == 'residentiel' %}selected{% endif %}>Domestique / Résidentiel</option>
+        <option value="professionnel" {% if type_usage == 'professionnel' %}selected{% endif %}>Professionnel / Non résidentiel</option>
       </select>
-    </div>
+    </form>
 
     {% if mode == 'personnalise' %}
     <form method="get" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px; border-radius: 10px; background: #f0f4f8;">
       <input type="hidden" name="mode" value="personnalise" />
+      <input type="hidden" name="type_usage" value="{{ type_usage }}" />
       <div style="display: flex; align-items: center; gap: 4px;">
         <label style="margin: 0; font-size: 11px;">Du</label>
         <input type="date" name="date_debut" value="{{ date_debut }}" style="width: auto; padding: 4px 8px; font-size: 11px; height: 30px;" />
@@ -78,13 +85,13 @@
       <div style="text-align: right;">
         <div style="font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 2px;">{{ total_kWh|floatformat:1 }} kWh consommés</div>
         <div style="font-size: 32px; font-weight: 800; color: #00b894; font-family: 'Outfit', sans-serif;">
-          <span id="facture_total_banner">0</span> <span style="font-size: 18px;">FCFA</span>
+          {{ total_facture|floatformat:0 }} <span style="font-size: 18px;">FCFA</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 4 BLOCS STATISTIQUES EN 1 LIGNE -->
+  <!-- 3 BLOCS STATISTIQUES -->
   <div class="grid-stats">
 
     <div style="background: linear-gradient(135deg, #0984e3 0%, #00b894 100%); color: #ffffff; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
@@ -94,22 +101,9 @@
       </div>
       <div>
         <div style="font-size: 22px; font-weight: 800; font-family: 'Outfit', sans-serif;">
-          <span id="facture_energie_stat">0</span> <span style="font-size: 14px;">FCFA</span>
+          {{ total_energie|floatformat:0 }} <span style="font-size: 14px;">FCFA</span>
         </div>
         <div style="font-size: 11px; opacity: 0.9;">Coût énergie</div>
-      </div>
-    </div>
-
-    <div style="background: #ffffff; border: 1px solid #e2ecf4; padding: 16px; border-radius: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 18px;"><i class="fa-solid fa-clipboard"></i></span>
-        <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: #e2ecf4; color: #5a7080;">Fixe</span>
-      </div>
-      <div>
-        <div style="font-size: 22px; font-weight: 800; color: #0984e3; font-family: 'Outfit', sans-serif;">
-          <span id="facture_abonnement_stat">1 500</span> <span style="font-size: 14px; color: #5a7080;">FCFA</span>
-        </div>
-        <div style="font-size: 11px; color: #5a7080;">Abonnement mensuel</div>
       </div>
     </div>
 
@@ -120,9 +114,9 @@
       </div>
       <div>
         <div style="font-size: 22px; font-weight: 800; color: #00b894; font-family: 'Outfit', sans-serif;">
-          <span id="facture_total_stat">0</span> <span style="font-size: 14px; color: #5a7080;">FCFA</span>
+          {{ total_facture|floatformat:0 }} <span style="font-size: 14px; color: #5a7080;">FCFA</span>
         </div>
-        <div style="font-size: 11px; color: #5a7080;">Total dû</div>
+        <div style="font-size: 11px; color: #5a7080;">Total dû (hors abonnement)</div>
       </div>
     </div>
 
@@ -133,7 +127,7 @@
       </div>
       <div>
         <div style="font-size: 22px; font-weight: 800; color: #0a1628; font-family: 'Outfit', sans-serif;">
-          <span id="facture_bareme_stat">Par tranches</span>
+          Par tranches
         </div>
         <div style="font-size: 11px; color: #5a7080;">Tarif progressif</div>
       </div>
@@ -147,20 +141,6 @@
       <h2 style="font-weight: 700; font-size: 16px; color: #0a1628; margin: 0; font-family: 'Outfit', sans-serif;">Détail de la facture</h2>
     </div>
 
-    <!-- Ligne Abonnement -->
-    <div style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2ecf4; flex-wrap: wrap; gap: 8px;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 36px; height: 36px; border-radius: 10px; background: #e2ecf4; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-clipboard"></i></div>
-        <div>
-          <div style="font-weight: 600; font-size: 13px; color: #0a1628;">Abonnement mensuel</div>
-          <div style="font-size: 11px; color: #5a7080;">Frais fixes Socadel</div>
-        </div>
-      </div>
-      <div style="font-weight: 700; font-size: 14px; font-family: monospace; color: #0a1628;">
-        <span id="row_abonnement_valeur">1 500</span> FCFA
-      </div>
-    </div>
-
     <!-- Lignes Appareils -->
     {% for row in appareils %}
     <div style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2ecf4; flex-wrap: wrap; gap: 8px;">
@@ -171,13 +151,13 @@
         <div>
           <div style="font-weight: 600; font-size: 13px; color: #0a1628;">{{ row.appareil.nom }}</div>
           <div style="font-size: 11px; color: #5a7080; font-family: monospace;">
-            {{ row.conso_kWh|floatformat:2 }} kWh · <span class="part_pourcentage">--</span>% de la conso globale
+            {{ row.conso_kWh|floatformat:2 }} kWh · {{ row.pct|floatformat:1 }}% de la conso globale
           </div>
         </div>
       </div>
       <div style="text-align: right;">
         <div style="font-weight: 700; font-size: 14px; font-family: monospace; color: #0984e3;">
-          <span class="app_calculated_cost" data-kwh="{{ row.conso_kWh }}">0</span> FCFA
+          {{ row.cout_fcfa|floatformat:0 }} FCFA
         </div>
         <a href="{% url 'cout_appareil' row.appareil.pk %}" style="font-size: 11px; color: #00b894; text-decoration: none; font-weight: 600;">Détail →</a>
       </div>
@@ -188,15 +168,24 @@
     <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border-top: 2px solid #e2ecf4;">
       <div style="font-weight: 800; font-size: 14px; color: #0a1628;">TOTAL DÛ</div>
       <div style="font-weight: 800; font-size: 18px; color: #00b894; font-family: 'Outfit', sans-serif;">
-        <span id="facture_total_bottom">0</span> FCFA
+        {{ total_facture|floatformat:0 }} FCFA
       </div>
     </div>
   </div>
 
   <!-- Historique des factures -->
   <div style="background: #ffffff; border: 1px solid #e2ecf4; border-radius: 16px; overflow: hidden;">
-    <div style="padding: 14px 16px; border-bottom: 1px solid #e2ecf4;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid #e2ecf4; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
       <h2 style="font-weight: 700; font-size: 16px; color: #0a1628; margin: 0; font-family: 'Outfit', sans-serif;">Historique des factures</h2>
+      <form method="get" style="display:flex; align-items:center; gap:6px;">
+        <input type="hidden" name="mode" value="{{ mode }}">
+        <input type="hidden" name="type_usage" value="{{ type_usage }}">
+        <select name="annee" onchange="this.form.submit()" style="padding:6px 10px; border-radius:8px; border:1px solid #ccdde9; font-size:12px;">
+          {% for a in annees %}
+            <option value="{{ a }}" {% if a == annee_selectionnee %}selected{% endif %}>{{ a }}</option>
+          {% endfor %}
+        </select>
+      </form>
     </div>
 
     <div style="padding: 16px; display: flex; flex-direction: column; gap: 8px;">
@@ -208,13 +197,10 @@
           <span style="font-weight: 700; font-size: 13px; color: #0984e3; font-family: monospace;">
             {{ h.fcfa|floatformat:0 }} FCFA
           </span>
-          <span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
-                       background: {% if h.statut == 'payée' %}#e6f9f5{% else %}#fff4e5{% endif %};
-                       color: {% if h.statut == 'payée' %}#00b894{% else %}#e17055{% endif %};">
-            {% if h.statut == 'payée' %}<i class="fa-solid fa-check"></i> Payée{% else %}<i class="fa-regular fa-clock"></i> En attente{% endif %}
-          </span>
         </div>
       </div>
+      {% empty %}
+      <p style="margin:0; font-size:13px; color:#5a7080;">Aucune donnée de consommation pour cette année.</p>
       {% endfor %}
     </div>
 
@@ -228,7 +214,6 @@
 
 {% block extra_scripts %}
 <script>
-  // 1. Initialisation Chart
   const labels = {{ chart_labels|safe }};
   const data   = {{ chart_data|safe }};
 
@@ -237,7 +222,7 @@
     data: {
       labels,
       datasets: [{
-        label: 'Facture (FCFA)',
+        label: 'Coût énergie (FCFA)',
         data,
         backgroundColor: 'rgba(9, 132, 227, 0.75)',
         borderColor: '#0984e3',
@@ -258,69 +243,5 @@
       }
     }
   });
-
-  // 2. Calcul du barème tranches et mise à jour dynamique
-  const totalKwhGlobal = parseFloat("{{ total_kWh }}") || 0;
-  const selectUsage = document.getElementById('global_type_usage');
-
-  function calculerEnergieGlobal(kwh, usage) {
-    let cout = 0;
-    if (usage === 'residentiel') {
-      const t1 = Math.min(kwh, 110);
-      if (t1 > 0) cout += t1 * 50;
-
-      const t2 = Math.min(Math.max(kwh - 110, 0), 290);
-      if (t2 > 0) cout += t2 * 79;
-
-      const t3 = Math.min(Math.max(kwh - 400, 0), 400);
-      if (t3 > 0) cout += t3 * 94;
-
-      const t4 = Math.min(Math.max(kwh - 800, 0), 1200);
-      if (t4 > 0) cout += t4 * 99;
-    } else {
-      const t1 = Math.min(kwh, 110);
-      if (t1 > 0) cout += t1 * 84;
-
-      const t2 = Math.min(Math.max(kwh - 110, 0), 290);
-      if (t2 > 0) cout += t2 * 92;
-
-      const t3 = Math.min(Math.max(kwh - 400, 0), 600);
-      if (t3 > 0) cout += t3 * 99;
-    }
-    return cout;
-  }
-
-  function recalculerFactureGlobale() {
-    const usage = selectUsage.value;
-    const abonnement = (usage === 'residentiel') ? 1500 : 3500;
-    const coutEnergie = calculerEnergieGlobal(totalKwhGlobal, usage);
-    const totalFacture = coutEnergie + abonnement;
-
-    document.getElementById('facture_total_banner').textContent = Math.round(totalFacture).toLocaleString('fr');
-    document.getElementById('facture_total_stat').textContent = Math.round(totalFacture).toLocaleString('fr');
-    document.getElementById('facture_total_bottom').textContent = Math.round(totalFacture).toLocaleString('fr');
-    document.getElementById('facture_energie_stat').textContent = Math.round(coutEnergie).toLocaleString('fr');
-    document.getElementById('facture_abonnement_stat').textContent = abonnement.toLocaleString('fr');
-    document.getElementById('row_abonnement_valeur').textContent = abonnement.toLocaleString('fr');
-
-    const costElements = document.querySelectorAll('.app_calculated_cost');
-    const percentElements = document.querySelectorAll('.part_pourcentage');
-
-    costElements.forEach((el, index) => {
-      const appKwh = parseFloat(el.getAttribute('data-kwh')) || 0;
-      const part = totalKwhGlobal > 0 ? (appKwh / totalKwhGlobal) : 0;
-      const appCost = coutEnergie * part;
-
-      el.textContent = Math.round(appCost).toLocaleString('fr');
-      if (percentElements[index]) {
-        percentElements[index].textContent = (part * 100).toFixed(1);
-      }
-    });
-  }
-
-  if (selectUsage) {
-    selectUsage.addEventListener('change', recalculerFactureGlobale);
-    recalculerFactureGlobale();
-  }
 </script>
 {% endblock %}
