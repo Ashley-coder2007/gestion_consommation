@@ -25,8 +25,8 @@ def diffuser_nouveau_signal(signal_agrege):
         {
             "type": "envoyer_donnees",
             "data": {
-                "tick_times": str(signal_agrege.tick_time),
-                "puissance_total": signal_agrege.puissance_totale_w,
+                "tick_times": signal_agrege.tick_time.isoformat(),
+                "puissance_total": float(signal_agrege.puissance_totale_w),
                 "nilm": resultat_nilm,
             },
         },
