@@ -106,13 +106,13 @@
   }
 
   .kpi-card {
-    flex: 1; /* Force les 4 cartes à faire exactement la même largeur */
+    flex: 1;
     height: 150px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     box-sizing: border-box;
-    min-width: 0; /* Évite le débordement */
+    min-width: 0;
   }
 
   /* Ligne 2 : 2 Graphiques côte à côte */
@@ -121,10 +121,11 @@
     gap: 24px;
     width: 100%;
     align-items: stretch;
+    margin-bottom: 24px;
   }
 
   .chart-card-left {
-    flex: 0 0 63%; /* Occupe ~63% de la ligne */
+    flex: 0 0 63%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -132,11 +133,73 @@
   }
 
   .chart-card-right {
-    flex: 0 0 35%; /* Occupe ~35% de la ligne */
+    flex: 0 0 35%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+  }
+
+  /* Ligne 3 : Suivi temps réel (NILM) */
+  .realtime-row {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .realtime-chart-card {
+    flex: 0 0 63%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .realtime-events-card {
+    flex: 0 0 35%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #16a34a;
+    display: inline-block;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+  }
+
+  #nilm-events {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  #nilm-events li {
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px solid #eef2f6;
+    color: #0a1628;
+  }
+
+  #nilm-events li:last-child {
+    border-bottom: none;
+  }
+
+  #nilm-events .empty-state {
+    color: #5a7080;
+    font-style: italic;
   }
 
   /* Éléments internes */
@@ -171,10 +234,11 @@
     .kpi-card {
       flex: 0 0 calc(50% - 10px);
     }
-    .charts-row {
+    .charts-row, .realtime-row {
       flex-direction: column;
     }
-    .chart-card-left, .chart-card-right {
+    .chart-card-left, .chart-card-right,
+    .realtime-chart-card, .realtime-events-card {
       flex: 0 0 100%;
     }
   }
@@ -303,7 +367,7 @@
 
   </div>
 
-  <!-- LIGNE 2 : 2 GRAPHIQUES CÔTE À CÔTE -->
+  <!-- LIGNE 2 : 2 GRAPHIQUES CÔTE À CÔTE (historique, données minute) -->
   <div class="charts-row">
 
     <!-- Graphique Gauche (Évolution) -->
@@ -364,6 +428,38 @@
 
   </div>
 
+  <!-- LIGNE 3 : SUIVI TEMPS RÉEL (NILM, données 0.5s) -->
+  <div class="realtime-row">
+
+    <!-- Graphique temps réel -->
+    <div class="card-saas realtime-chart-card">
+      <div class="flex-between" style="margin-bottom: 12px;">
+        <div>
+          <h2 style="font-size: 16px; font-weight: 700; margin: 0; color: #0a1628;">Puissance instantanée</h2>
+          <p style="font-size: 12px; color: #5a7080; margin: 2px 0 0 0;">Flux en direct (NILM)</p>
+        </div>
+        <span class="badge-saas" style="background: #f0fdf4; color: #16a34a; display: flex; align-items: center; gap: 6px;">
+          <span class="live-dot"></span> Live
+        </span>
+      </div>
+      <div style="position: relative; width: 100%; height: 260px;">
+        <canvas id="chartTempsReel"></canvas>
+      </div>
+    </div>
+
+    <!-- Liste des événements NILM détectés -->
+    <div class="card-saas realtime-events-card">
+      <div style="margin-bottom: 12px;">
+        <h2 style="font-size: 16px; font-weight: 700; margin: 0; color: #0a1628;">Appareils détectés</h2>
+        <p style="font-size: 12px; color: #5a7080; margin: 2px 0 0 0;">Derniers événements</p>
+      </div>
+      <ul id="nilm-events">
+        <li class="empty-state">En attente d'événements...</li>
+      </ul>
+    </div>
+
+  </div>
+
 </div>
 {% endblock %}
 
@@ -380,7 +476,7 @@
   const donutData = {{ donut_data|default:"[549.0, 198.0, 59.1]"|safe }};
   const donutColors = {{ donut_colors|default:"['#0984e3', '#00b894', '#00cec9']"|safe }};
 
-  // 1. Graphique Courbes (Gauche)
+  // 1. Graphique Courbes (Gauche) — historique, données minute
   const ctxEvol = document.getElementById('chartEvol').getContext('2d');
   new Chart(ctxEvol, {
     type: 'line',
@@ -444,5 +540,94 @@
       }
     }
   });
+
+  // 3. Graphique Temps Réel (NILM) — données 0.5s via WebSocket
+  const ctxTempsReel = document.getElementById('chartTempsReel').getContext('2d');
+  const MAX_POINTS = 60; // 60 x 0.5s = 30s d'historique glissant affiché
+
+  const chartTempsReel = new Chart(ctxTempsReel, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Puissance instantanée (W)',
+        data: [],
+        borderColor: '#e17055',
+        backgroundColor: 'rgba(225, 112, 85, 0.08)',
+        borderWidth: 2,
+        tension: 0.25,
+        fill: true,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false, // évite le clignotement à chaque update de 0.5s
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, font: { family: 'Outfit', size: 11 } } }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: '#f0f3f6' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // 4. Connexion WebSocket pour le flux NILM temps réel
+  const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+  const socket = new WebSocket(wsProtocol + window.location.host + "/ws/temps-reel/");
+
+  socket.onopen = function () {
+    console.log("WebSocket temps réel connecté");
+  };
+
+  socket.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+
+    // Mise à jour du graphique temps réel
+    const heure = new Date(data.tick_times).toLocaleTimeString('fr-FR', { hour12: false });
+    chartTempsReel.data.labels.push(heure);
+    chartTempsReel.data.datasets[0].data.push(data.puissance_total);
+
+    if (chartTempsReel.data.labels.length > MAX_POINTS) {
+      chartTempsReel.data.labels.shift();
+      chartTempsReel.data.datasets[0].data.shift();
+    }
+    chartTempsReel.update();
+
+    // Affichage de l'appareil détecté par le NILM (si événement)
+    if (data.nilm && data.nilm.evenement) {
+      afficherEvenementNilm(data.nilm, heure);
+    }
+  };
+
+  socket.onerror = function (e) {
+    console.error("Erreur WebSocket :", e);
+  };
+
+  socket.onclose = function () {
+    console.warn("WebSocket temps réel déconnecté");
+  };
+
+  // Ajoute une ligne dans la liste d'événements NILM
+  function afficherEvenementNilm(nilm, heure) {
+    const liste = document.getElementById('nilm-events');
+    if (!liste) return;
+
+    // Supprime le message "en attente" au premier événement
+    const emptyState = liste.querySelector('.empty-state');
+    if (emptyState) emptyState.remove();
+
+    const item = document.createElement('li');
+    const action = nilm.evenement === 'ON' ? 'allumé' : 'éteint';
+    item.textContent = `${heure} — ${nilm.appareil} ${action}`;
+    liste.prepend(item);
+
+    // limite l'affichage aux 10 derniers événements
+    while (liste.children.length > 10) {
+      liste.removeChild(liste.lastChild);
+    }
+  }
 </script>
 {% endblock %}

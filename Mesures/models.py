@@ -1,5 +1,5 @@
-
 from django.db import models
+# PAS d'import de Appareil ici
 
 
 class Mesure(models.Model):
@@ -46,3 +46,30 @@ class MesureAppareil(models.Model):
 
     def __str__(self):
         return f"{self.mesure_id} - {self.appareil_id}"
+
+
+class SignalAgrege(models.Model):
+    tick_times = models.DateTimeField()
+    puissance_total = models.FloatField()
+
+    class Meta:
+        db_table = 'signal_agrege'
+
+    def __str__(self):
+        return f"{self.tick_times} - {self.puissance_total}W"
+
+
+class SignatureElectrique(models.Model):
+    id_appareil = models.ForeignKey(
+        'Appareils.Appareil',   # ← string aussi ici, comme MesureAppareil
+        on_delete=models.CASCADE
+    )
+    puissance_min = models.FloatField()
+    puissance_max = models.FloatField()
+    date_maj = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'signature_electrique'
+
+    def __str__(self):
+        return f"{self.id_appareil} : {self.puissance_min}-{self.puissance_max}W"

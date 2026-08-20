@@ -6,7 +6,7 @@ from facturation.services import get_prix_kwh
 
 
 class StatistiqueView(TemplateView):
-    template_name = "Statistiques/statistique.html"
+    template_name = "statistiques/statistique.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
