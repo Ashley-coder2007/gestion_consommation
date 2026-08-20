@@ -1,20 +1,17 @@
-# Mesures/management/commands/recalculer_signatures.py
 from django.core.management.base import BaseCommand
 from django.db.models import Min, Max
-from Mesures.models import Mesure, MesureAppareil, SignatureElectrique
+from Mesures.models import MesureFine, SignatureElectrique
 
 
 class Command(BaseCommand):
-    help = "Reconstruit signature_electrique à partir des mesures fines"
+    help = "Reconstruit signature_electrique à partir de mesures_fines_jan2010"
 
     def handle(self, *args, **options):
-        # Liste des appareils distincts présents dans les mesures
-        appareils_ids = MesureAppareil.objects.values_list('appareil_id', flat=True).distinct()
+        appareils_ids = MesureFine.objects.values_list('id_appareil', flat=True).distinct()
 
         for id_app in appareils_ids:
-            stats = Mesure.objects.filter(
-                mesures_appareils__appareil_id=id_app,
-                puissance_active__gt=0
+            stats = MesureFine.objects.filter(
+                id_appareil_id=id_app, puissance_active__gt=0
             ).aggregate(mn=Min('puissance_active'), mx=Max('puissance_active'))
 
             if stats["mn"] is None:

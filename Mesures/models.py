@@ -48,20 +48,82 @@ class MesureAppareil(models.Model):
         return f"{self.mesure_id} - {self.appareil_id}"
 
 
-class SignalAgrege(models.Model):
-    tick_times = models.DateTimeField()
-    puissance_total = models.FloatField()
+class MesureFine(models.Model):
+    """
+    Mesures fines à 0.5s (schéma public), utilisées uniquement pour
+    construire signature_electrique. Table créée manuellement en base.
+    """
+    id_mesure_fine = models.BigAutoField(primary_key=True, db_column='id_mesure_fine')
+    id_appareil = models.ForeignKey(
+        'Appareils.Appareil',
+        on_delete=models.CASCADE,
+        db_column='id_appareil',
+        related_name='mesures_fines'
+    )
+    tick_time = models.DateTimeField(db_column='tick_time')
+    puissance_active = models.FloatField(null=True, blank=True, help_text="Watts")
+    courant = models.FloatField(null=True, blank=True, help_text="Ampères")
+    tension = models.FloatField(null=True, blank=True, help_text="Volts")
+    facteur_puissance = models.FloatField(null=True, blank=True)
+    energie = models.FloatField(null=True, blank=True, help_text="kWh")
+    frequence = models.FloatField(null=True, blank=True, help_text="Hz")
 
     class Meta:
-        db_table = 'signal_agrege'
+        # À CONFIRMER : le suffixe "_jan2010" est-il fixe ou temporaire (données de test) ?
+        db_table = 'mesures_fines_jan2010'
+        managed = False
+        verbose_name = 'Mesure fine'
+        verbose_name_plural = 'Mesures fines'
+        ordering = ['tick_time']
 
     def __str__(self):
-        return f"{self.tick_times} - {self.puissance_total}W"
+        return f"Mesure fine {self.tick_time} - appareil {self.id_appareil_id}"
+
+
+class SignalAgrege(models.Model):
+    """Schéma agrege — table signal_agrege_jan2010"""
+    tick_time = models.DateTimeField(db_column='tick_time')
+    puissance_totale_w = models.FloatField(db_column='puissance_totale_w')
+
+    class Meta:
+        # À CONFIRMER : même remarque sur le suffixe "_jan2010"
+        db_table = '"agrege"."signal_agrege_jan2010"'
+        managed = False
+
+    def __str__(self):
+        return f"{self.tick_time} - {self.puissance_totale_w}W"
+
+
+class EstimationNilm(models.Model):
+    """
+    Schéma agrege — table estimations_nilm_jan2010_py
+    Stocke l'historique des résultats du NILM (appareil détecté + puissance estimée).
+    """
+    tick_time = models.DateTimeField(db_column='tick_time')
+    id_appareil = models.ForeignKey(
+        'Appareils.Appareil',
+        on_delete=models.CASCADE,
+        db_column='id_appareil',
+        related_name='estimations_nilm'
+    )
+    puissance_estimee = models.FloatField(db_column='puissance_estimee')
+
+    class Meta:
+        db_table = '"agrege"."estimations_nilm_jan2010_py"'
+        managed = False
+
+    def __str__(self):
+        return f"{self.tick_time} - {self.id_appareil_id} : {self.puissance_estimee}W"
 
 
 class SignatureElectrique(models.Model):
+    """
+    À CONFIRMER : cette table n'apparaît pas encore dans les captures envoyées.
+    À faire créer par ta coéquipière si elle n'existe pas encore, ou à ajuster
+    ici si elle existe déjà avec des noms de colonnes différents.
+    """
     id_appareil = models.ForeignKey(
-        'Appareils.Appareil',   # ← string aussi ici, comme MesureAppareil
+        'Appareils.Appareil',
         on_delete=models.CASCADE
     )
     puissance_min = models.FloatField()
@@ -70,6 +132,7 @@ class SignatureElectrique(models.Model):
 
     class Meta:
         db_table = 'signature_electrique'
+        managed = False
 
     def __str__(self):
         return f"{self.id_appareil} : {self.puissance_min}-{self.puissance_max}W"
