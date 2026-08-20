@@ -583,6 +583,7 @@
   };
 
   socket.onmessage = function (e) {
+    console.log("MESSAGE WEBSOCKET REÇU :", e.data);
     const data = JSON.parse(e.data);
 
     // Mise à jour du graphique temps réel
