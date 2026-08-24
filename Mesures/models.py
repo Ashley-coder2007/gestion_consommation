@@ -1,5 +1,5 @@
 from django.db import models
-# PAS d'import de Appareil ici
+
 
 
 class Mesure(models.Model):

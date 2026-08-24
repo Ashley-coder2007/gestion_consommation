@@ -1,7 +1,7 @@
 from .signatures_service import charger_signatures
 
 _dernier_point = {"puissance": None}
-TOLERANCE = 20  # watts, ajustable selon tes tests
+TOLERANCE = 100000  # watts, ajustable selon tes tests
 
 
 def analyser_nilm(puissance_actuelle, tick_time):

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+ {% extends "base.html" %}
 {% block title %}Statistiques & Tableau de bord — Socadel{% endblock %}
 
 {% block extra_head %}
@@ -201,8 +201,7 @@
     color: #5a7080;
     font-style: italic;
   }
-
-  /* Éléments internes */
+/* Éléments internes */
   .icon-box {
     width: 40px;
     height: 40px;
@@ -316,8 +315,7 @@
         <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">Conso. mensuelle</div>
       </div>
     </div>
-
-    <!-- Carte 2 -->
+ <!-- Carte 2 -->
     <div class="card-saas kpi-card">
       <div class="flex-between">
         <div class="icon-box" style="background: #e6f8f5;">
@@ -378,7 +376,7 @@
       </div>
       <div style="position: relative; width: 100%; height: 260px;">
         <button id="btn-lancer-nilm" style="background:#0984e3;color:white;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;margin-bottom:10px;">
-          ▶ Lancer la démo NILM
+          ▶️ Lancer la démo NILM
         </button>
         <canvas id="chartEvol"></canvas>
       </div>
@@ -394,8 +392,7 @@
       <div style="position: relative; width: 100%; height: 170px; margin: 10px 0;">
         <canvas id="chartDonut"></canvas>
       </div>
-
-      <!-- Légende compacte -->
+ <!-- Légende compacte -->
       <div style="border-top: 1px solid #eef2f6; padding-top: 10px; display: flex; flex-direction: column; gap: 6px;">
         {% if categories_stats %}
           {% for cat in categories_stats %}
@@ -478,8 +475,7 @@
   const donutLabels = {{ donut_labels|default:"['Climatisation', 'Électroménager', 'Informatique']"|safe }};
   const donutData = {{ donut_data|default:"[549.0, 198.0, 59.1]"|safe }};
   const donutColors = {{ donut_colors|default:"['#0984e3', '#00b894', '#00cec9']"|safe }};
-
-  // 1. Graphique Courbes (Gauche) — historique, données minute
+ // 1. Graphique Courbes (Gauche) — historique, données minute
   const ctxEvol = document.getElementById('chartEvol').getContext('2d');
   new Chart(ctxEvol, {
     type: 'line',
@@ -613,11 +609,20 @@
   socket.onclose = function () {
     console.warn("WebSocket temps réel déconnecté");
   };
-
-  document.getElementById('btn-lancer-nilm').addEventListener('click', async () => {
-    await fetch('/statistiques/lancer-nilm/?vitesse=0.1');
-    console.log("Rejeu NILM lancé en arrière-plan");
-  });
+document.getElementById('btn-lancer-nilm').addEventListener('click', async function () {
+    if (this.disabled) return;
+    this.disabled = true;
+    this.textContent = "⏳ Rejeu en cours...";
+    try {
+        await fetch('/lancer-nilm/?vitesse=0.1');
+        console.log("Rejeu NILM lancé en arrière-plan");
+    } finally {
+        setTimeout(() => {
+            this.disabled = false;
+            this.textContent = "▶️ Lancer la démo NILM";
+        }, 5000);
+    }
+});
 
   // Ajoute une ligne dans la liste d'événements NILM
   function afficherEvenementNilm(nilm, heure) {

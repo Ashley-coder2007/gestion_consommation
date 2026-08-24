@@ -224,69 +224,30 @@
 
 {% block extra_scripts %}
 <script>
-  function openModal(modalId) { document.getElementById(modalId)?.classList.add('active'); }
-  function closeModal(modalId) { document.getElementById(modalId)?.classList.remove('active'); }
-  window.onclick = function(event) { document.querySelectorAll('.modal-backdrop').forEach(m => { if (event.target === m) m.classList.remove('active'); }); };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.active').forEach(m => m.classList.remove('active')); });
+(function () {
+  const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+  const socket = new WebSocket(wsProtocol + window.location.host + "/ws/temps-reel/");
 
-  function openAddModal() { document.getElementById('formAddAppareil')?.reset(); updateEstimationAdd(); openModal('modalAjout'); }
-
-  function openEditModal(button) {
-    const form = document.getElementById('formEditAppareil');
-    if (!form) return;
-    form.action = button.getAttribute('data-action') || '';
-    document.getElementById('edit_nom').value = button.getAttribute('data-nom') || '';
-    document.getElementById('edit_categorie').value = button.getAttribute('data-categorie') || '';
-    document.getElementById('edit_puissance').value = button.getAttribute('data-puissance') || '';
-    document.getElementById('edit_heures').value = button.getAttribute('data-heures') || '';
-    updateEstimationEdit();
-    openModal('modalEdit');
-  }
-
-  function openDeleteModal(button) {
-    const form = document.getElementById('formDeleteAppareil');
-    if (!form) return;
-    form.action = button.getAttribute('data-action') || '';
-    document.getElementById('deleteAppareilNom').textContent = button.getAttribute('data-nom') || '';
-    openModal('modalDelete');
-  }
-
-  function calculerCoutMensuel(kwhMois, typeUsage) {
-    let coutTotal = 0;
-    if (typeUsage === 'residentiel') {
-      const t1 = Math.min(kwhMois, 110); if (t1 > 0) coutTotal += t1 * 50;
-      const t2 = Math.min(Math.max(kwhMois - 110, 0), 220); if (t2 > 0) coutTotal += t2 * 79;
-      const t3 = Math.min(Math.max(kwhMois - 400, 0), 400); if (t3 > 0) coutTotal += t3 * 94;
-      const t4 = Math.min(Math.max(kwhMois - 800, 0), 1200); if (t4 > 0) coutTotal += t4 * 94;
-    } else {
-      const t1 = Math.min(kwhMois, 110); if (t1 > 0) coutTotal += t1 * 84;
-      const t2 = Math.min(Math.max(kwhMois - 110, 0), 290); if (t2 > 0) coutTotal += t2 * 92;
-      const t3 = Math.min(Math.max(kwhMois - 400, 0), 600); if (t3 > 0) coutTotal += t3 * 99;
+  socket.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+    if (data.nilm && data.nilm.evenement && data.nilm.appareil) {
+      const rows = document.querySelectorAll("table tbody tr");
+      rows.forEach(function (row) {
+        const nomCell = row.querySelector("td div div");
+        if (nomCell && nomCell.textContent.trim() === data.nilm.appareil) {
+          row.style.transition = "background-color 0.3s";
+          row.style.backgroundColor = data.nilm.evenement === "ON" ? "#e6f9f5" : "#fff5f6";
+          setTimeout(function () {
+            row.style.backgroundColor = "";
+          }, 2000);
+        }
+      });
     }
-    return coutTotal;
-  }
+  };
 
-  function getNumericValue(elementId) { const el = document.getElementById(elementId); if (!el) return 0; return parseFloat(String(el.value).replace(',', '.')) || 0; }
-
-  function updateEstimation(puissanceId, heuresId, usageId, kwhId, coutId) {
-    const kwhEl = document.getElementById(kwhId), coutEl = document.getElementById(coutId);
-    if (!kwhEl || !coutEl) return;
-    const p = getNumericValue(puissanceId), h = getNumericValue(heuresId);
-    const usage = document.getElementById(usageId)?.value || 'residentiel';
-    const kwhMois = ((p * h) / 1000) * 30;
-    kwhEl.textContent = kwhMois.toFixed(1) + ' kWh';
-    coutEl.textContent = Math.round(calculerCoutMensuel(kwhMois, usage)).toLocaleString('fr') + ' FCFA';
-  }
-
-  function updateEstimationAdd() { updateEstimation('modal_puissance', 'modal_heures', 'modal_type_usage', 'modal_est_kwh', 'modal_est_cout'); }
-  function updateEstimationEdit() { updateEstimation('edit_puissance', 'edit_heures', 'edit_type_usage', 'edit_est_kwh', 'edit_est_cout'); }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    ['modal_puissance', 'modal_heures'].forEach(id => document.getElementById(id)?.addEventListener('input', updateEstimationAdd));
-    document.getElementById('modal_type_usage')?.addEventListener('change', updateEstimationAdd);
-    ['edit_puissance', 'edit_heures'].forEach(id => document.getElementById(id)?.addEventListener('input', updateEstimationEdit));
-    document.getElementById('edit_type_usage')?.addEventListener('change', updateEstimationEdit);
-    updateEstimationAdd();
-  });
+  socket.onerror = function (e) {
+    console.error("Erreur WebSocket (page Appareils) :", e);
+  };
+})();
 </script>
 {% endblock %}

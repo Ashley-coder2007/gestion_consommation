@@ -13,9 +13,8 @@ class StatistiqueView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = date.today()
-        mois = int(self.request.GET.get("mois", today.month))
-        annee = int(self.request.GET.get("annee", today.year))
-
+        mois = int(self.request.GET.get("mois", 1))
+        annee = int(self.request.GET.get("annee", 2010))
         debut, fin = services._bornes_mois(annee, mois)
         total_kWh_mois = services.get_total_kwh_periode(debut, fin)
         prix_kwh = get_prix_kwh(fin)

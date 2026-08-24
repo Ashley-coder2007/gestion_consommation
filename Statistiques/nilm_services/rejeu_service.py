@@ -11,7 +11,10 @@ class FakeSignal:
 
 
 def _rejouer(vitesse, id_appareil=None):
-    mesures = MesureFine.objects.order_by('tick_time')
+    from datetime import datetime
+    debut = datetime(2010, 1, 1, 0, 0, 0)
+    fin = datetime(2010, 1, 1, 0, 30, 0)
+    mesures = MesureFine.objects.filter(tick_time__range=(debut, fin)).order_by('tick_time')
     if id_appareil:
         mesures = mesures.filter(id_appareil_id=id_appareil)
 
