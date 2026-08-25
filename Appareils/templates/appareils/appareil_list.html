@@ -224,30 +224,108 @@
 
 {% block extra_scripts %}
 <script>
-(function () {
-  const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-  const socket = new WebSocket(wsProtocol + window.location.host + "/ws/temps-reel/");
+  // ═══ Gestion des modales Ajouter / Modifier / Supprimer ═══
 
-  socket.onmessage = function (e) {
-    const data = JSON.parse(e.data);
-    if (data.nilm && data.nilm.evenement && data.nilm.appareil) {
-      const rows = document.querySelectorAll("table tbody tr");
-      rows.forEach(function (row) {
-        const nomCell = row.querySelector("td div div");
-        if (nomCell && nomCell.textContent.trim() === data.nilm.appareil) {
-          row.style.transition = "background-color 0.3s";
-          row.style.backgroundColor = data.nilm.evenement === "ON" ? "#e6f9f5" : "#fff5f6";
-          setTimeout(function () {
-            row.style.backgroundColor = "";
-          }, 2000);
-        }
-      });
-    }
-  };
+  function openAddModal() {
+    document.getElementById('modalAjout').classList.add('active');
+  }
 
-  socket.onerror = function (e) {
-    console.error("Erreur WebSocket (page Appareils) :", e);
-  };
-})();
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  function openEditModal(btn) {
+    const action = btn.getAttribute('data-action');
+    const nom = btn.getAttribute('data-nom');
+    const categorie = btn.getAttribute('data-categorie');
+    const puissance = btn.getAttribute('data-puissance');
+    const heures = btn.getAttribute('data-heures');
+
+    document.getElementById('formEditAppareil').setAttribute('action', action);
+    document.getElementById('edit_nom').value = nom || '';
+    document.getElementById('edit_categorie').value = categorie || '';
+    document.getElementById('edit_puissance').value = puissance || '';
+    document.getElementById('edit_heures').value = heures || '';
+
+    calculerEstimation('edit_puissance', 'edit_heures', 'edit_est_kwh', 'edit_est_cout');
+
+    document.getElementById('modalEdit').classList.add('active');
+  }
+
+  function openDeleteModal(btn) {
+    const action = btn.getAttribute('data-action');
+    const nom = btn.getAttribute('data-nom');
+
+    document.getElementById('formDeleteAppareil').setAttribute('action', action);
+    document.getElementById('deleteAppareilNom').textContent = nom || '';
+
+    document.getElementById('modalDelete').classList.add('active');
+  }
+
+  // ═══ Estimation instantanée (kWh / coût) ═══
+  const TARIF_FCFA_KWH = 79; // ajuste selon ton tarif réel
+
+  function calculerEstimation(idPuissance, idHeures, idKwh, idCout) {
+    const puissance = parseFloat(document.getElementById(idPuissance).value) || 0;
+    const heures = parseFloat(document.getElementById(idHeures).value) || 0;
+
+    const kwhMois = (puissance * heures * 30) / 1000;
+    const coutMois = kwhMois * TARIF_FCFA_KWH;
+
+    document.getElementById(idKwh).textContent = kwhMois.toFixed(1) + ' kWh';
+    document.getElementById(idCout).textContent = Math.round(coutMois) + ' FCFA';
+  }
+
+  // Recalcule en direct pendant la saisie (formulaire Ajouter)
+  document.getElementById('modal_puissance').addEventListener('input', () =>
+    calculerEstimation('modal_puissance', 'modal_heures', 'modal_est_kwh', 'modal_est_cout')
+  );
+  document.getElementById('modal_heures').addEventListener('input', () =>
+    calculerEstimation('modal_puissance', 'modal_heures', 'modal_est_kwh', 'modal_est_cout')
+  );
+
+  // Recalcule en direct pendant la saisie (formulaire Modifier)
+  document.getElementById('edit_puissance').addEventListener('input', () =>
+    calculerEstimation('edit_puissance', 'edit_heures', 'edit_est_kwh', 'edit_est_cout')
+  );
+  document.getElementById('edit_heures').addEventListener('input', () =>
+    calculerEstimation('edit_puissance', 'edit_heures', 'edit_est_kwh', 'edit_est_cout')
+  );
+
+  // Fermer la modale en cliquant sur le fond
+  document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) {
+        backdrop.classList.remove('active');
+      }
+    });
+  });
+
+  // ═══ WebSocket temps réel (code existant, inchangé) ═══
+  (function () {
+    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const socket = new WebSocket(wsProtocol + window.location.host + "/ws/temps-reel/");
+
+    socket.onmessage = function (e) {
+      const data = JSON.parse(e.data);
+      if (data.nilm && data.nilm.evenement && data.nilm.appareil) {
+        const rows = document.querySelectorAll("table tbody tr");
+        rows.forEach(function (row) {
+          const nomCell = row.querySelector("td div div");
+          if (nomCell && nomCell.textContent.trim() === data.nilm.appareil) {
+            row.style.transition = "background-color 0.3s";
+            row.style.backgroundColor = data.nilm.evenement === "ON" ? "#e6f9f5" : "#fff5f6";
+            setTimeout(function () {
+              row.style.backgroundColor = "";
+            }, 2000);
+          }
+        });
+      }
+    };
+
+    socket.onerror = function (e) {
+      console.error("Erreur WebSocket (page Appareils) :", e);
+    };
+  })();
 </script>
 {% endblock %}
