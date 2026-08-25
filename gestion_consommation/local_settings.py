@@ -9,3 +9,5 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+DEBUG = True
